@@ -1,5 +1,7 @@
 # takshak
 
+*Gates that are code, not prompts. (Formerly `shipwright` — renamed to avoid a naming collision with several unrelated same-niche projects.)*
+
 A structured engineering pipeline for [Claude Code](https://code.claude.com), packaged as a plugin. Design → adversarial review → break down → implement → ship, with Jira sync, an enforced approval gate, a quality gate on every edit, rate-limit protection, a live dashboard with pipeline metrics, and a guided review for anyone walking in cold.
 
 ```
