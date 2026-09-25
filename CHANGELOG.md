@@ -7,6 +7,7 @@
 - Dashboard: pipeline stepper, a "ready for review / blocked on X" verdict banner, adversary-pass history, and a pipeline-metrics tile grid.
 - `/takshak:review [sdd | slug]` — guided, section-by-section walkthrough of a hardened SDD for a reviewer, ending in an explicit verdict; never touches `task_state.approved`.
 - `evals/` — a `claude plugin eval` suite (breakdown gate, self-approval denial, quality-gate plumbing), wired into CI as an advisory job.
+- Renamed the plugin from `shipwright` to `takshak` (naming collision with several unrelated same-niche projects). No behavior change; commands are now `/takshak:*` and the env override is `TAKSHAK_PYTHON`.
 
 ## 2.0.0 — plugin release
 
