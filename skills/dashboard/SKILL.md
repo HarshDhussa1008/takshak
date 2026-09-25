@@ -1,10 +1,10 @@
 ---
 name: dashboard
-description: Open the read-only shipwright pipeline dashboard (risks, tasks, amendments, budget, patterns, inbox) and call out anything that needs action. Use when the user asks for status, the dashboard, or an overview of the pipeline.
+description: Open the read-only takshak pipeline dashboard (risks, tasks, amendments, budget, patterns, inbox) and call out anything that needs action. Use when the user asks for status, the dashboard, or an overview of the pipeline.
 argument-hint: "[serve]"
 ---
 
-# /shipwright:dashboard — Read-only pipeline view
+# /takshak:dashboard — Read-only pipeline view
 
 A visual pass for what a terminal is bad at: scanning a risk register, spotting drifted tasks, reading amendments in context, checking budget headroom. It never edits code and never replaces the CLI loop.
 

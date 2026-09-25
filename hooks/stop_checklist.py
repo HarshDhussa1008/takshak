@@ -129,7 +129,7 @@ def retro_item(project: Project) -> str | None:
         return None
     state["retro_offered"] = True
     write_json(project.task_state, state)
-    return f"All {len(tasks)} task(s) complete. Run /shipwright:retro while it is fresh."
+    return f"All {len(tasks)} task(s) complete. Run /takshak:retro while it is fresh."
 
 
 def info_items(project: Project) -> list[str]:
@@ -152,7 +152,7 @@ def info_items(project: Project) -> list[str]:
         items.append(f"Recurring lint/type patterns without a memory: {', '.join(unwritten[:5])}.")
     last_write = age_seconds(state.get("last_memory_write"))
     if state.get("tasks") and (last_write is None or last_write > MEMORY_NUDGE_HOURS * 3600):
-        items.append("No memory written in 4h+: any non-obvious decision worth /shipwright:remember?")
+        items.append("No memory written in 4h+: any non-obvious decision worth /takshak:remember?")
     return items
 
 
@@ -172,7 +172,7 @@ def main() -> None:
     output: dict[str, Any] = {}
     if can_block:
         output["decision"] = "block"
-        output["reason"] = "Shipwright checklist -- handle before finishing:\n" + "\n".join(f"- {a}" for a in actions)
+        output["reason"] = "Takshak checklist -- handle before finishing:\n" + "\n".join(f"- {a}" for a in actions)
         acknowledge_budget(project)
         memo["last_block"] = action_hash
     elif actions:
@@ -182,7 +182,7 @@ def main() -> None:
 
     info_hash = digest(info) if info else ""
     if info and memo.get("last_info") != info_hash:
-        output["systemMessage"] = "Shipwright: " + " | ".join(info)
+        output["systemMessage"] = "Takshak: " + " | ".join(info)
     memo["last_info"] = info_hash
 
     save_hook_state(project, memo)

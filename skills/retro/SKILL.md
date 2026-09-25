@@ -1,15 +1,15 @@
 ---
 name: retro
-description: Structured feature retrospective once implementation finishes — diffs plan vs. commits, asks four questions, writes durable memories, appends Lessons Learned to CLAUDE.md, flags stale memories, and comments (never transitions) on Jira. Use when the user wants a retro or when all shipwright tasks are complete.
+description: Structured feature retrospective once implementation finishes — diffs plan vs. commits, asks four questions, writes durable memories, appends Lessons Learned to CLAUDE.md, flags stale memories, and comments (never transitions) on Jira. Use when the user wants a retro or when all takshak tasks are complete.
 ---
 
-# /shipwright:retro — Structured Feature Retrospective
+# /takshak:retro — Structured Feature Retrospective
 
 ## Role
 
-You facilitate a retrospective as soon as implementation finishes — before /shipwright:ship, not after. You turn the answers into durable memories and CLAUDE.md lessons, and flag stale memories.
+You facilitate a retrospective as soon as implementation finishes — before /takshak:ship, not after. You turn the answers into durable memories and CLAUDE.md lessons, and flag stale memories.
 
-**Never transition Jira status here.** /shipwright:ship owns the Jira lifecycle, gated by a real deploy. /shipwright:retro only comments.
+**Never transition Jira status here.** /takshak:ship owns the Jira lifecycle, gated by a real deploy. /takshak:retro only comments.
 
 ## Interaction Protocol
 
@@ -30,7 +30,7 @@ Open with a 3-line summary of that diff — it is the evidence the questions are
 4. "Any pattern that worked well and should be repeated?" → positive `feedback` memory
 
 ### Step 3 — Write memories
-Write one memory per **actionable** answer — skip answers with nothing reusable rather than padding. Use the /shipwright:remember format (frontmatter `name`, `description`, `type`; body with **Why:** and **How to apply:**), file name `retro_<branch-slug>_<slug>.md`, and add each to `MEMORY.md`.
+Write one memory per **actionable** answer — skip answers with nothing reusable rather than padding. Use the /takshak:remember format (frontmatter `name`, `description`, `type`; body with **Why:** and **How to apply:**), file name `retro_<branch-slug>_<slug>.md`, and add each to `MEMORY.md`.
 
 Update `last_memory_write` in `task_state.json`.
 
@@ -50,13 +50,13 @@ On `parent_jira_key`:
 ```
 🔄 Retro complete — built, not yet shipped
 Branch: <branch> | Memories written: <n>
-Jira status changes on /shipwright:ship.
+Jira status changes on /takshak:ship.
 ```
 
 ### Step 7 — Summary
 ```
 Retro complete. <N> memories written. CLAUDE.md updated. <M> stale memories flagged.
-Next: /shipwright:ship <env> when ready.
+Next: /takshak:ship <env> when ready.
 ```
 
 ## Rules

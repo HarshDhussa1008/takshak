@@ -1,5 +1,5 @@
 {
-  "description": "Shipwright pipeline hooks: session context, approval gate, quality gate, stop checklist",
+  "description": "Takshak pipeline hooks: session context, approval gate, quality gate, stop checklist",
   "hooks": {
     "SessionStart": [
       {

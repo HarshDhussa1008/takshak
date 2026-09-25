@@ -5,7 +5,7 @@ argument-hint: <env, e.g. staging | prod>
 disable-model-invocation: true
 ---
 
-# /shipwright:ship — Gated Deploy Pipeline
+# /takshak:ship — Gated Deploy Pipeline
 
 ## Role
 
@@ -18,7 +18,7 @@ Environment: `$ARGUMENTS` (`staging` | `prod` | any name your project uses; anyt
 ### Step 0 — Load config + confirm
 Read `.claude/framework.json`: `build_command`, `test_command`, `project_typecheck_command`, `jira_integration`, `jira_transitions`, `slack_integration`, `slack_mcp_channel`, `project_name`.
 
-If `build_command` is still the `echo '[ship] Configure…'` placeholder, stop and tell the user to set it (or run `/shipwright:doctor`).
+If `build_command` is still the `echo '[ship] Configure…'` placeholder, stop and tell the user to set it (or run `/takshak:doctor`).
 
 Confirm: "Shipping **<project_name>** to **<env>**. Proceed? (yes/no)"
 
@@ -43,9 +43,9 @@ Checkpoint phase 2.
 
 ### Gate 3 — Independent review
 Find the base: `git merge-base HEAD origin/HEAD` (fall back to `main`, then `master`). Spawn in parallel, each given only the diff range, the SDD path, and `task_state.json`:
-- `shipwright:code-reviewer` — always
-- `shipwright:test-auditor` — always; verifies every mitigated risk has a test that exercises it
-- `shipwright:security-reviewer` — when the diff touches auth, secrets, crypto, input parsing, SQL, file paths, or public endpoints
+- `takshak:code-reviewer` — always
+- `takshak:test-auditor` — always; verifies every mitigated risk has a test that exercises it
+- `takshak:security-reviewer` — when the diff touches auth, secrets, crypto, input parsing, SQL, file paths, or public endpoints
 
 Merge their findings, deduplicated, most severe first.
 Any `critical` on prod → hard stop, list findings. On staging → warn, list, continue.
@@ -62,7 +62,7 @@ Checkpoint phase 4.
 For each task with a `jira_key`, and for `parent_jira_key`: use the Jira MCP (`getTransitionsForJiraIssue` + `transitionJiraIssue`, or `jira_get_transitions` + `jira_transition_issue`) to find the transition whose target status name matches, and apply it. No match → log `[JIRA] no transition to "<status>" for <key>` and continue.
 Comment on the parent:
 ```
-🚀 Deployed to <env> by Claude Code (shipwright)
+🚀 Deployed to <env> by Claude Code (takshak)
 Branch: <branch> | <timestamp> | Tasks: <keys>
 ```
 
@@ -76,7 +76,7 @@ bash "${CLAUDE_PLUGIN_ROOT}/hooks/run.sh" "${CLAUDE_PLUGIN_ROOT}/tools/metrics.p
 ```
 
 ### Step 6 — Failure memory + Jira comment
-Every failed gate writes a `project` memory (see /shipwright:remember for the format) and, if Jira is on, comments on the parent:
+Every failed gate writes a `project` memory (see /takshak:remember for the format) and, if Jira is on, comments on the parent:
 ```
 ❌ Deploy to <env> failed at Gate <N>: <gate name>
 Error: <one-line summary>
@@ -88,6 +88,6 @@ bash "${CLAUDE_PLUGIN_ROOT}/hooks/run.sh" "${CLAUDE_PLUGIN_ROOT}/tools/metrics.p
 ```
 
 ## Rules
-- /shipwright:ship is the only skill that transitions Jira status.
+- /takshak:ship is the only skill that transitions Jira status.
 - Never pass `--no-verify`, skip hooks, or edit tests to make a gate pass.
 - Keep gate results in the checkpoint, not in context.

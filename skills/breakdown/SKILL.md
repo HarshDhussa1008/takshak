@@ -1,10 +1,10 @@
 ---
 name: breakdown
-description: Decompose a hardened SDD into at most 8 atomic, dependency-ordered tasks, create them as Claude Code tasks and (optionally) Jira subtasks, and write task_state.json. Refuses SDDs that have not been through /shipwright:design hardening. Use after an SDD is approved as a design.
+description: Decompose a hardened SDD into at most 8 atomic, dependency-ordered tasks, create them as Claude Code tasks and (optionally) Jira subtasks, and write task_state.json. Refuses SDDs that have not been through /takshak:design hardening. Use after an SDD is approved as a design.
 argument-hint: <path to SDD>
 ---
 
-# /shipwright:breakdown — SDD → Tasks + Jira Sync
+# /takshak:breakdown — SDD → Tasks + Jira Sync
 
 ## Role
 
@@ -19,11 +19,11 @@ Input: `$ARGUMENTS`
 Read the SDD and **refuse** if any of these is true — say which, and stop:
 
 - No `## Risk Register`, or it is empty
-- Any of the 10 failure classes from /shipwright:design has no verdict
+- Any of the 10 failure classes from /takshak:design has no verdict
 - Any `Critical` risk whose Status is not `mitigated`
 - No `## Test Plan`, or a Goal with no test row
 
-Refusal text: `"This SDD has not been hardened — <reason>. Run /shipwright:design on it first."`
+Refusal text: `"This SDD has not been hardened — <reason>. Run /takshak:design on it first."`
 
 An unmitigated `High` is a warning, not a block: list them and ask whether to proceed.
 
@@ -98,7 +98,7 @@ Write `.claude/checkpoint.json` with `active_skill: "breakdown"`, `phase: 1`, `p
 
 ### Step 8 — Jira comment on the parent (if enabled)
 ```
-🔀 Breakdown created by Claude Code (shipwright)
+🔀 Breakdown created by Claude Code (takshak)
 
 - [PROJ-77] Add DB schema migration (S)
 - [PROJ-78] Implement data access layer (M) — depends on PROJ-77

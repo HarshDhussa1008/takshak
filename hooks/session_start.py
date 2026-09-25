@@ -187,7 +187,7 @@ def checkpoint_lines(project: Project) -> list[str]:
         return []
     lines = [
         f"[CHECKPOINT] Interrupted work ({str(data.get('timestamp', ''))[:16] or 'unknown time'})",
-        f"  Skill: /shipwright:{data['active_skill']} | Task: {data.get('active_task_id', '')}",
+        f"  Skill: /takshak:{data['active_skill']} | Task: {data.get('active_task_id', '')}",
         f"  Phase: {data.get('phase_label') or data.get('phase', '?')}",
     ]
     if modified := data.get("files_modified_this_session"):
@@ -196,7 +196,7 @@ def checkpoint_lines(project: Project) -> list[str]:
         lines.append(f"  Next: {next_step}")
     if notes := data.get("notes"):
         lines.append(f"  Deferred: {notes}")
-    lines.append("  The user can run /shipwright:resume to continue or /shipwright:checkpoint clear to discard.")
+    lines.append("  The user can run /takshak:resume to continue or /takshak:checkpoint clear to discard.")
     return lines
 
 
@@ -232,11 +232,11 @@ def main() -> None:
     out: list[str] = []
     if legacy_install(project):
         out.append(
-            "[SHIPWRIGHT] Legacy copy-installed hooks are still wired in .claude/settings.json and "
-            "will double-fire alongside the plugin. Tell the user to run /shipwright:init to migrate."
+            "[TAKSHAK] Legacy copy-installed hooks are still wired in .claude/settings.json and "
+            "will double-fire alongside the plugin. Tell the user to run /takshak:init to migrate."
         )
     if added:
-        out.append(f"[SHIPWRIGHT] framework.json gained new settings with defaults: {', '.join(added)}")
+        out.append(f"[TAKSHAK] framework.json gained new settings with defaults: {', '.join(added)}")
     if banner := budget_banner(project):
         out.append(banner)
 

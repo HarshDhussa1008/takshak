@@ -1,4 +1,4 @@
-# Shipwright runtime state -- per developer, not for version control
+# Takshak runtime state -- per developer, not for version control
 checkpoint.json
 task_state.json
 anti_pattern_registry.json
@@ -7,8 +7,8 @@ budget.json
 budget.json.tmp
 budget_history.jsonl
 budget_history.jsonl.tmp
-shipwright_hook_state.json
-shipwright_hook_state.json.tmp
+takshak_hook_state.json
+takshak_hook_state.json.tmp
 dashboard.html
 inbox/
 settings.local.json

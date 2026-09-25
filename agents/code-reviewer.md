@@ -1,6 +1,6 @@
 ---
 name: code-reviewer
-description: Independent reviewer for a git diff range against its SDD and task plan — correctness, contract drift, error handling, and maintainability. Used by /shipwright:ship Gate 3; can also be asked directly to review a branch.
+description: Independent reviewer for a git diff range against its SDD and task plan — correctness, contract drift, error handling, and maintainability. Used by /takshak:ship Gate 3; can also be asked directly to review a branch.
 tools: Read, Grep, Glob, Bash
 model: sonnet
 ---

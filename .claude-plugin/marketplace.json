@@ -1,13 +1,13 @@
 {
-  "name": "shipwright",
+  "name": "takshak",
   "owner": {
     "name": "Harsh Dhussa",
     "url": "https://github.com/HarshDhussa1008"
   },
-  "description": "Shipwright engineering pipeline for Claude Code",
+  "description": "Takshak engineering pipeline for Claude Code",
   "plugins": [
     {
-      "name": "shipwright",
+      "name": "takshak",
       "source": "./",
       "description": "Design -> adversarial review -> breakdown -> implement -> ship, with Jira sync and enforced gates"
     }

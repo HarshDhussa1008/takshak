@@ -1,4 +1,4 @@
-"""Shipwright project bootstrap -- used by /shipwright:init, /shipwright:doctor and install.sh/.ps1.
+"""Takshak project bootstrap -- used by /takshak:init, /takshak:doctor and install.sh/.ps1.
 
     run.sh tools/bootstrap.py init   --project DIR [--plugin-data DIR] [--team] [--marketplace-repo OWNER/REPO]
                                      [--no-statusline] [--force-statusline] [--migrate]
@@ -29,9 +29,9 @@ sys.path.insert(0, str(PLUGIN_ROOT / "hooks"))
 from _common import DEFAULT_CONFIG, claude_slug, read_json, write_json  # noqa: E402
 
 TEMPLATES = PLUGIN_ROOT / "templates"
-DEFAULT_MARKETPLACE_REPO = "HarshDhussa1008/shipwright"
-MARKETPLACE_NAME = "shipwright"
-PLUGIN_ID = f"shipwright@{MARKETPLACE_NAME}"
+DEFAULT_MARKETPLACE_REPO = "HarshDhussa1008/takshak"
+MARKETPLACE_NAME = "takshak"
+PLUGIN_ID = f"takshak@{MARKETPLACE_NAME}"
 STATUSLINE_FILES = ("budget_sentinel.py", "_common.py", "run.sh")
 LEGACY_FILES = (
     ".claude/hooks/budget_sentinel.py",
@@ -391,7 +391,7 @@ def doctor(root: Path, data_dir: Path | None) -> int:
 
     config_path = root / ".claude" / "framework.json"
     check(sys.version_info >= (3, 10), f"Python {sys.version.split()[0]}", "Python 3.10+ required")
-    check(config_path.is_file(), "framework.json present", "no .claude/framework.json -- run /shipwright:init")
+    check(config_path.is_file(), "framework.json present", "no .claude/framework.json -- run /takshak:init")
     config = {**DEFAULT_CONFIG, **read_json(config_path)}
     check((root / ".git").exists(), "git repository", "not a git repository (drift and branch features disabled)")
     for key in ("test_command", "lint_command", "typecheck_command", "project_typecheck_command", "build_command"):
@@ -405,16 +405,16 @@ def doctor(root: Path, data_dir: Path | None) -> int:
             found = subprocess.run([exe, "-c", f"import {module.group(1)}"], capture_output=True, check=False).returncode == 0
         check(found, f"{key}: {cmd}", f"{key}: `{cmd}` is not runnable here")
     if "echo '[ship]" in str(config.get("build_command")):
-        check(False, "", "build_command is still the placeholder -- /shipwright:ship cannot deploy")
+        check(False, "", "build_command is still the placeholder -- /takshak:ship cannot deploy")
     if config.get("jira_integration"):
         check(bool(config.get("jira_project_key")), f"Jira project {config.get('jira_project_key')}",
               "jira_integration is on but jira_project_key is empty")
     local = read_json(root / ".claude" / "settings.local.json")
     check("budget_sentinel.py" in str((local.get("statusLine") or {}).get("command", "")),
-          "statusline wired (budget alerts on)", "statusline not wired -- budget alerts are off (/shipwright:init)")
+          "statusline wired (budget alerts on)", "statusline not wired -- budget alerts are off (/takshak:init)")
     legacy = read_json(root / ".claude" / "settings.json")
     check(".claude/hooks/" not in json.dumps(legacy).replace("\\\\", "/"),
-          "no legacy hook wiring", "legacy copy-installed hooks still wired -- /shipwright:init --migrate")
+          "no legacy hook wiring", "legacy copy-installed hooks still wired -- /takshak:init --migrate")
     if sys.platform == "win32":
         bash_on_path = shutil.which("bash")
         shadowed = bash_on_path and any(marker in bash_on_path for marker in ("System32", "WindowsApps"))

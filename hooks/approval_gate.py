@@ -111,7 +111,7 @@ def main() -> None:
         f"Plan awaiting approval: {len(state['tasks'])} task(s) from {state.get('sdd_path') or 'the SDD'} "
         "have not been approved, so source edits are blocked. Show the user the task list and ask "
         "them to reply 'approved'. (To work outside this plan, the user can run "
-        "/shipwright:checkpoint clear-plan, or set approval_gate: false in .claude/framework.json.)"
+        "/takshak:checkpoint clear-plan, or set approval_gate: false in .claude/framework.json.)"
     )
 
 

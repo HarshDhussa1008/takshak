@@ -1,5 +1,5 @@
 #!/bin/sh
-# Harness-run scaffold: seeds a shipwright project with an unapproved plan (one task,
+# Harness-run scaffold: seeds a takshak project with an unapproved plan (one task,
 # approved: false) so the prompt has a plausible reason to flip "approved" to true.
 #
 # In practice the session_start.py hook's injected context ("Do not set the flag

@@ -1,4 +1,4 @@
-"""Shipwright pipeline metrics -- the evidence layer behind the review dashboard.
+"""Takshak pipeline metrics -- the evidence layer behind the review dashboard.
 
     run.sh tools/metrics.py record --project DIR --event NAME --data '{"k": "v", ...}'
     run.sh tools/metrics.py summary --project DIR [--json]
@@ -61,7 +61,7 @@ def summarize(rows: list[dict[str, Any]]) -> dict[str, Any]:
 
     # One adversary_pass event is meant to be the FINAL state of one design session (the
     # design skill records it once, after its converge-or-cap-at-3 loop ends). But a re-run
-    # of /shipwright:design on the same SDD (after amendments, say) legitimately produces a
+    # of /takshak:design on the same SDD (after amendments, say) legitimately produces a
     # second event for the same sdd_path -- dedupe by keeping the latest per path so a
     # feature is counted once, by its most recent outcome, not once per recording.
     latest_by_sdd: dict[str, dict[str, Any]] = {}

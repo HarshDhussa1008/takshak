@@ -1,5 +1,5 @@
 #!/bin/sh
-# Interpreter launcher for shipwright hooks, the statusline and tools. Pure POSIX sh --
+# Interpreter launcher for takshak hooks, the statusline and tools. Pure POSIX sh --
 # no bashisms -- so it runs the same under `sh` or `bash`; hooks.json and the skills
 # invoke it with `bash`, which Git Bash always provides on Windows (`sh` is not
 # guaranteed to be on PATH there).
@@ -7,8 +7,8 @@
 # IMPORTANT (Windows): every command string that invokes this script must use forward
 # slashes only (${CLAUDE_PLUGIN_ROOT}/hooks/run.sh). Git Bash's MSYS runtime reparses the
 # inherited command line itself and treats an unescaped backslash as an escape character,
-# so a raw native path like D:\shipwright\hooks\run.sh is silently mangled into
-# D:shipwrighthooksrun.sh and bash fails to find the file. Claude Code's own command
+# so a raw native path like D:\takshak\hooks\run.sh is silently mangled into
+# D:takshakhooksrun.sh and bash fails to find the file. Claude Code's own command
 # strings (as used in hooks.json and the skills here) are forward-slash already; this
 # only bites a caller that builds a command string from a raw Windows path itself.
 #
@@ -36,7 +36,7 @@ if [ -n "${CLAUDE_PLUGIN_DATA:-}" ]; then
 fi
 
 check='import sys; sys.exit(0 if sys.version_info >= (3, 10) else 1)'
-for candidate in "${SHIPWRIGHT_PYTHON:-}" python3 python "py -3"; do
+for candidate in "${TAKSHAK_PYTHON:-}" python3 python "py -3"; do
   [ -z "$candidate" ] && continue
   if $candidate -c "$check" </dev/null >/dev/null 2>&1; then
     if [ -n "$cache" ]; then
@@ -46,5 +46,5 @@ for candidate in "${SHIPWRIGHT_PYTHON:-}" python3 python "py -3"; do
   fi
 done
 
-echo "[shipwright] Python 3.10+ not found (tried python3, python, py -3). Set SHIPWRIGHT_PYTHON." >&2
+echo "[takshak] Python 3.10+ not found (tried python3, python, py -3). Set TAKSHAK_PYTHON." >&2
 exit 0

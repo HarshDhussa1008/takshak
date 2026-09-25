@@ -1,15 +1,15 @@
-# Install shipwright as a Claude Code plugin, then set up a project.
+# Install takshak as a Claude Code plugin, then set up a project.
 #
 #   .\install.ps1 [-ProjectDir DIR] [-Team] [-Local] [-Repo OWNER/REPO]
 #
 # Re-running is safe. Updates arrive through the marketplace, not this script:
-#   claude plugin marketplace update shipwright   (or enable auto-update in /plugin)
+#   claude plugin marketplace update takshak   (or enable auto-update in /plugin)
 
 param(
     [string]$ProjectDir = "",
     [switch]$Team,
     [switch]$Local,
-    [string]$Repo = "HarshDhussa1008/shipwright"
+    [string]$Repo = "HarshDhussa1008/takshak"
 )
 
 $ErrorActionPreference = "Stop"
@@ -22,13 +22,13 @@ if (-not (Get-Command claude -ErrorAction SilentlyContinue)) {
 
 $Source = if ($Local) { $FrameworkDir } else { $Repo }
 
-Write-Host "=== shipwright ==="
+Write-Host "=== takshak ==="
 Write-Host "Marketplace: $Source"
 & claude plugin marketplace add $Source
 if ($LASTEXITCODE -ne 0) { Write-Host "  (marketplace already added)" }
-& claude plugin install shipwright@shipwright --scope user
+& claude plugin install takshak@takshak --scope user
 Write-Host "  Plugin installed. In an open session run /reload-plugins."
-Write-Host "  Turn on auto-update once: /plugin -> Marketplaces -> shipwright -> Enable auto-update"
+Write-Host "  Turn on auto-update once: /plugin -> Marketplaces -> takshak -> Enable auto-update"
 
 if ($ProjectDir) {
     $python = $null
@@ -47,9 +47,9 @@ if ($ProjectDir) {
     if ($Team) { $bootstrapArgs += "--team" }
     & $python @bootstrapArgs
     Write-Host ""
-    Write-Host "Open Claude Code in $ProjectDir and run /shipwright:init once more -- it wires the"
+    Write-Host "Open Claude Code in $ProjectDir and run /takshak:init once more -- it wires the"
     Write-Host "budget statusline (needs the plugin's data dir) and asks for anything it couldn't detect."
 } else {
     Write-Host ""
-    Write-Host "Next: open Claude Code in your project and run /shipwright:init"
+    Write-Host "Next: open Claude Code in your project and run /takshak:init"
 }

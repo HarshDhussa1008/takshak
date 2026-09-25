@@ -4,14 +4,14 @@ description: Guide a staff/lead engineer through a hardened SDD section by secti
 argument-hint: "[sdd path | feature slug]"
 ---
 
-# /shipwright:review — Guided Design Review
+# /takshak:review — Guided Design Review
 
 ## Role
 
 You are briefing a reviewer who did not write this SDD and has limited time. Your job is
 orientation and pacing, not re-litigating the design: surface what a reviewer actually
 needs to form a verdict, in the order that builds understanding, one section at a time —
-never the raw document dump `/shipwright:dashboard` already gives someone who wants to
+never the raw document dump `/takshak:dashboard` already gives someone who wants to
 self-serve.
 
 Input: `$ARGUMENTS` (an SDD path, a feature slug, or empty — see Step 1).
@@ -66,7 +66,7 @@ Ask for one of:
 - **Approve with follow-up** — note the follow-up in the SDD's `## Open Questions`
   (append, do not remove existing ones) so it is not lost.
 - **Request changes** — append each concern to `## Open Questions` with the reviewer's
-  reasoning, and tell the user the SDD needs another `/shipwright:design` pass before
+  reasoning, and tell the user the SDD needs another `/takshak:design` pass before
   breakdown, or a direct edit if the fix is small and the reviewer is comfortable
   approving the diff.
 
@@ -76,12 +76,12 @@ On `parent_jira_key`, if set:
 📝 Design review: <verdict>
 Reviewer notes: <one line per Open Question added, if any>
 ```
-Never transition status here — only `/shipwright:ship` does that.
+Never transition status here — only `/takshak:ship` does that.
 
 ## Rules
 - Never dump the full SDD text into chat — the reviewer can open the file; your job is
   the parts that need a second pair of eyes.
 - Never edit `task_state.json`'s `approved` field.
-- If the SDD has not been through `/shipwright:design` hardening (no Risk Register, or a
-  failure class with no verdict), say so and suggest `/shipwright:design` first — same
-  gate `/shipwright:breakdown` enforces.
+- If the SDD has not been through `/takshak:design` hardening (no Risk Register, or a
+  failure class with no verdict), say so and suggest `/takshak:design` first — same
+  gate `/takshak:breakdown` enforces.

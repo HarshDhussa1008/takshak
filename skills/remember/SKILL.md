@@ -1,10 +1,10 @@
 ---
 name: remember
-description: Save a durable project learning — a decision, a correction, an anti-pattern, or a convention — as a memory that shipwright re-injects at session start and design time. Use when the user says remember this, or when a pattern alert or staged style correction needs to be written down.
+description: Save a durable project learning — a decision, a correction, an anti-pattern, or a convention — as a memory that takshak re-injects at session start and design time. Use when the user says remember this, or when a pattern alert or staged style correction needs to be written down.
 argument-hint: "[what to remember]"
 ---
 
-# /shipwright:remember — write a project memory
+# /takshak:remember — write a project memory
 
 ## Where
 `memory_path` from `.claude/framework.json` if set, otherwise `~/.claude/projects/<project-folder>/memory/`, where `<project-folder>` is the absolute project path with every non-alphanumeric character replaced by `-` (`D:\app` → `D--app`, `/home/u/app` → `-home-u-app`).

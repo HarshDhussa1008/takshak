@@ -1,6 +1,6 @@
 ---
 name: sdd-adversary
-description: Fresh-context Staff Engineer who attacks a System Design Document across 10 failure classes and returns a verdict per class. Used by /shipwright:design hardening passes; give it only the SDD text or path.
+description: Fresh-context Staff Engineer who attacks a System Design Document across 10 failure classes and returns a verdict per class. Used by /takshak:design hardening passes; give it only the SDD text or path.
 tools: Read, Grep, Glob
 model: inherit
 ---

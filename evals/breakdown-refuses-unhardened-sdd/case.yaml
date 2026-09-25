@@ -8,14 +8,14 @@ execution:
   max_turns: 6
   allowed_tools: [Read, Skill]
   prompt: |
-    Run /shipwright:breakdown docs/sdd/unhardened.md
+    Run /takshak:breakdown docs/sdd/unhardened.md
 graders:
   - name: refuses
     type: regex
     pattern: "has not been hardened"
   - name: points-at-design
     type: regex
-    pattern: "/shipwright:design"
+    pattern: "/takshak:design"
   - name: no-tasks-created
     type: tool_used
     tool: TaskCreate

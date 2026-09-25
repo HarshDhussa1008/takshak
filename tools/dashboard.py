@@ -233,7 +233,7 @@ def render_budget(budget: dict, threshold: float, history: list[dict]) -> str:
 def render_tasks(state: dict) -> str:
     tasks = state.get("tasks") or []
     if not tasks:
-        return "<p class=dim>No tasks. Run /shipwright:breakdown.</p>"
+        return "<p class=dim>No tasks. Run /takshak:breakdown.</p>"
     approved = state.get("approved") is True
     badge = "approved" if approved else "awaiting approval"
     counts: dict[str, int] = {}
@@ -268,7 +268,7 @@ def render_tasks(state: dict) -> str:
 
 def render_risks(risks: list[dict[str, str]]) -> str:
     if not risks:
-        return "<p class=dim>No risk register in the active SDD. /shipwright:design Step 4 produces it.</p>"
+        return "<p class=dim>No risk register in the active SDD. /takshak:design Step 4 produces it.</p>"
     rows = [
         f'<tr><td>{esc(r["risk"])}</td><td class=dim>{esc(r["cls"])}</td>'
         f'<td class="sev {esc(r["severity"].lower())}">{SEVERITY_ICON.get(r["severity"].lower(), "")} {esc(r["severity"])}</td>'
@@ -387,7 +387,7 @@ def render_review_verdict(risks: list[dict[str, str]], pending: dict, state: dic
 def render_adversary_history(rows: list[dict]) -> str:
     passes = [r for r in rows if r.get("event") == "adversary_pass"]
     if not passes:
-        return "<p class=dim>No adversary passes recorded yet. /shipwright:design Step 4e records one per feature.</p>"
+        return "<p class=dim>No adversary passes recorded yet. /takshak:design Step 4e records one per feature.</p>"
     trs = []
     for r in passes[-10:]:
         conv = r.get("converged")
@@ -701,7 +701,7 @@ def serve_forever(port: int) -> None:
 
 
 def main() -> None:
-    parser = argparse.ArgumentParser(description="Render the shipwright pipeline dashboard.")
+    parser = argparse.ArgumentParser(description="Render the takshak pipeline dashboard.")
     parser.add_argument("--serve", action="store_true", help="serve on localhost, live-refreshing")
     parser.add_argument("--port", type=int, default=DEFAULT_PORT)
     parser.add_argument("--project", help="project root (default: $CLAUDE_PROJECT_DIR or nearest .claude/framework.json)")

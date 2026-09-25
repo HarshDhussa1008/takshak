@@ -1,12 +1,12 @@
 """statusLine command -- receives session JSON on stdin on every render.
 
 1. Renders a compact status line (model, branch, context %, rate-limit %, pipeline phase).
-2. Side effect, in shipwright-enabled projects only: persists rate-limit headroom to
+2. Side effect, in takshak-enabled projects only: persists rate-limit headroom to
    .claude/budget.json and trips an alert at budget_alert_threshold so the Stop /
    UserPromptSubmit hooks can tell Claude to checkpoint before a breach.
 
 The statusline is the only local surface that receives rate_limits; hooks do not. Plugins
-cannot own a statusLine, so /shipwright:init points .claude/settings.local.json at a copy of
+cannot own a statusLine, so /takshak:init points .claude/settings.local.json at a copy of
 this file in ${CLAUDE_PLUGIN_DATA}/statusline, which session_start.py refreshes whenever
 the plugin updates. Must never raise and never be slow.
 """

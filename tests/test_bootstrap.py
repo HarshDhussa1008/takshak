@@ -55,12 +55,12 @@ def test_team_settings_enable_plugin_with_auto_update(tmp_path: Path) -> None:
     proj = tmp_path / "svc"
     (proj / ".claude").mkdir(parents=True)
     (proj / ".claude" / "settings.json").write_text(json.dumps({"permissions": {"allow": ["Bash(ls)"]}}))
-    bootstrap(proj, "team", "--marketplace-repo", "tally/shipwright")
+    bootstrap(proj, "team", "--marketplace-repo", "tally/takshak")
     settings = json.loads((proj / ".claude" / "settings.json").read_text())
     assert settings["permissions"]["allow"] == ["Bash(ls)"]
-    market = settings["extraKnownMarketplaces"]["shipwright"]
-    assert market["source"] == {"source": "github", "repo": "tally/shipwright"} and market["autoUpdate"] is True
-    assert settings["enabledPlugins"]["shipwright@shipwright"] is True
+    market = settings["extraKnownMarketplaces"]["takshak"]
+    assert market["source"] == {"source": "github", "repo": "tally/takshak"} and market["autoUpdate"] is True
+    assert settings["enabledPlugins"]["takshak@takshak"] is True
 
 
 def test_migrate_removes_legacy_wiring_but_keeps_user_hooks(tmp_path: Path) -> None:

@@ -1,6 +1,6 @@
 #!/bin/sh
-# Harness-run scaffold (outside the agent's own tool sandbox): seeds a shipwright project
-# with an SDD that has no Risk Register, so /shipwright:breakdown must refuse it (the same
+# Harness-run scaffold (outside the agent's own tool sandbox): seeds a takshak project
+# with an SDD that has no Risk Register, so /takshak:breakdown must refuse it (the same
 # gate it enforces against a real unhardened SDD -- see skills/breakdown/SKILL.md Step 1).
 set -eu
 mkdir -p .claude docs/sdd

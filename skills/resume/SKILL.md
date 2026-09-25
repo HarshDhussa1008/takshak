@@ -1,9 +1,9 @@
 ---
 name: resume
-description: Continue interrupted shipwright work from .claude/checkpoint.json — reports where it stopped, checks the budget window has reset, and picks up the literal next action. Use when the user says resume, continue, or pick up where we left off.
+description: Continue interrupted takshak work from .claude/checkpoint.json — reports where it stopped, checks the budget window has reset, and picks up the literal next action. Use when the user says resume, continue, or pick up where we left off.
 ---
 
-# /shipwright:resume — continue from the checkpoint
+# /takshak:resume — continue from the checkpoint
 
 1. Read `.claude/checkpoint.json`. If it is empty or has no `active_skill`, say there is nothing to resume and summarise `task_state.json` instead (done / open / needs_recheck).
 2. Read `.claude/budget.json`. If `alert.tripped` and `resets_at` is still in the future, tell the user the window resets at `resets_at_iso` and recommend waiting; continue only if they say so.

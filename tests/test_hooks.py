@@ -15,7 +15,7 @@ from pathlib import Path
 from conftest import Proj
 
 
-def test_hooks_are_silent_outside_shipwright_projects(tmp_path: Path) -> None:
+def test_hooks_are_silent_outside_takshak_projects(tmp_path: Path) -> None:
     bare = Proj(tmp_path / "bare", tmp_path / "data")
     bare.root.mkdir()
     for name in ("session_start", "prompt_submit", "approval_gate", "quality_gate", "stop_checklist"):
@@ -68,7 +68,7 @@ def test_session_start_migrates_config_and_syncs_statusline(project: Proj) -> No
     assert "gained new settings" in out
     for name in ("budget_sentinel.py", "_common.py", "run.sh"):
         assert (project.data / "statusline" / name).is_file()
-    assert "shipwright_hook_state.json" in (project.claude / ".gitignore").read_text()
+    assert "takshak_hook_state.json" in (project.claude / ".gitignore").read_text()
 
 
 def test_session_start_flags_legacy_wiring(project: Proj) -> None:
@@ -302,7 +302,7 @@ def test_stop_flags_empty_checkpoint_during_implementation(project: Proj, plan) 
 
 def test_stop_offers_retro_once(project: Proj, plan) -> None:
     project.write(".claude/task_state.json", plan(approved=True, statuses=("completed", "completed")))
-    assert "/shipwright:retro" in project.hook_json("stop_checklist")["systemMessage"]
+    assert "/takshak:retro" in project.hook_json("stop_checklist")["systemMessage"]
     assert project.read(".claude/task_state.json")["retro_offered"] is True
 
 

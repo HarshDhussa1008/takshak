@@ -1,4 +1,4 @@
-"""Shared plumbing for every shipwright hook.
+"""Shared plumbing for every takshak hook.
 
 The Claude Code hook contract, in one place so no hook gets it wrong again:
 - Input arrives as JSON on stdin. There are no CLAUDE_TOOL_INPUT / CLAUDE_SESSION_ID env vars.
@@ -93,7 +93,7 @@ class Project:
         self.budget_history = self.state_dir / "budget_history.jsonl"
         self.registry = self.state_dir / "anti_pattern_registry.json"
         self.amendments = self.state_dir / "amendments_pending.json"
-        self.hook_state = self.state_dir / "shipwright_hook_state.json"
+        self.hook_state = self.state_dir / "takshak_hook_state.json"
         self.metrics = self.state_dir / "metrics.jsonl"
 
     @property
@@ -237,7 +237,7 @@ def run_safely(main: Any) -> None:
     try:
         main()
     except Exception as exc:  # noqa: BLE001 -- last-resort guard for a hook process
-        if os.environ.get("SHIPWRIGHT_DEBUG"):
+        if os.environ.get("TAKSHAK_DEBUG"):
             raise
-        print(f"[shipwright] hook error suppressed: {type(exc).__name__}: {exc}", file=sys.stderr)
+        print(f"[takshak] hook error suppressed: {type(exc).__name__}: {exc}", file=sys.stderr)
     sys.exit(0)

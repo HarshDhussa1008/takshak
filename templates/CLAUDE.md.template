@@ -35,18 +35,18 @@
 | Config | `<path>` |
 | Tests | `<path>` |
 
-## Development Pipeline (shipwright)
+## Development Pipeline (takshak)
 
 ```
-/shipwright:design <requirement | TICKET-ID>   → SDD + adversarial hardening
-/shipwright:breakdown <sdd-path>               → tasks (+ Jira); reply "approved" to unlock code
+/takshak:design <requirement | TICKET-ID>   → SDD + adversarial hardening
+/takshak:breakdown <sdd-path>               → tasks (+ Jira); reply "approved" to unlock code
 (implement)                                    → sdd-implementer runs the bug loop
-/shipwright:retro                              → capture learnings
-/shipwright:ship <env>                         → docs → tests → types → review → build → Jira
-/shipwright:dashboard                          → visual pipeline state (read-only)
-/shipwright:review <sdd | slug>                → guided walkthrough for a reviewer
-/shipwright:resume | :checkpoint | :remember   → continue, save/clear, write a memory
-/shipwright:doctor                             → installation health check
+/takshak:retro                              → capture learnings
+/takshak:ship <env>                         → docs → tests → types → review → build → Jira
+/takshak:dashboard                          → visual pipeline state (read-only)
+/takshak:review <sdd | slug>                → guided walkthrough for a reviewer
+/takshak:resume | :checkpoint | :remember   → continue, save/clear, write a memory
+/takshak:doctor                             → installation health check
 ```
 
 Commit messages reference the task (`T<id>`) or Jira key.

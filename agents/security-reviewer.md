@@ -1,6 +1,6 @@
 ---
 name: security-reviewer
-description: Security specialist for an SDD or a diff — authn/authz, injection, secrets, data exposure, SSRF, path traversal, unsafe deserialization, dependency risk. Used by /shipwright:design when a design touches auth, PII or public endpoints, and by /shipwright:ship Gate 3 when the diff does.
+description: Security specialist for an SDD or a diff — authn/authz, injection, secrets, data exposure, SSRF, path traversal, unsafe deserialization, dependency risk. Used by /takshak:design when a design touches auth, PII or public endpoints, and by /takshak:ship Gate 3 when the diff does.
 tools: Read, Grep, Glob, Bash
 model: sonnet
 ---

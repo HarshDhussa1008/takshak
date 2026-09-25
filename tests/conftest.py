@@ -34,7 +34,7 @@ class Proj:
         env = dict(os.environ)
         env["CLAUDE_PROJECT_DIR"] = str(self.root)
         env["CLAUDE_PLUGIN_DATA"] = str(self.data)
-        env["SHIPWRIGHT_DEBUG"] = "1"  # surface exceptions instead of swallowing them
+        env["TAKSHAK_DEBUG"] = "1"  # surface exceptions instead of swallowing them
         return env
 
     def write(self, rel: str, obj: Any) -> Path:

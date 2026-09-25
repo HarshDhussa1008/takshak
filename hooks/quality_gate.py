@@ -91,7 +91,7 @@ def broken_tool_note(project: Project, session: str, label: str, rc: int, out: s
     memo[key] = session
     save_hook_state(project, memo)
     first = next((ln.strip() for ln in out.splitlines() if ln.strip()), f"exit code {rc}")
-    return f"{label} command failed without findings ({first[:160]}). Fix it in .claude/framework.json or run /shipwright:doctor."
+    return f"{label} command failed without findings ({first[:160]}). Fix it in .claude/framework.json or run /takshak:doctor."
 
 
 def main() -> None:
@@ -164,7 +164,7 @@ def main() -> None:
     if alerts:
         text.append(
             f"[PATTERN] recurring: {', '.join(alerts)} -- fix the root habit; if it is a deliberate "
-            "convention, record it with /shipwright:remember."
+            "convention, record it with /takshak:remember."
         )
     emit_context("PostToolUse", "\n".join(text))
 

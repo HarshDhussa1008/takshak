@@ -1,5 +1,5 @@
 """tools/dashboard.py -- run as a real subprocess against a seeded project, the way
-/shipwright:dashboard actually invokes it, and the rendered HTML inspected for the
+/takshak:dashboard actually invokes it, and the rendered HTML inspected for the
 review-verdict banner, the pipeline stepper, and the metrics/adversary sections."""
 
 from __future__ import annotations

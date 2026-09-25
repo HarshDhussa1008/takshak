@@ -4,7 +4,7 @@ description: Generate a System Design Document (SDD) from a requirement or Jira 
 argument-hint: <requirement text | JIRA-KEY>
 ---
 
-# /shipwright:design — System Design Document Generator
+# /takshak:design — System Design Document Generator
 
 ## Role
 
@@ -88,7 +88,7 @@ Unresolved decisions that need input. Empty if none.
 
 Do not review your own draft in this context. You just wrote the mitigations; you will converge on yourself and produce a Risk Register that reads rigorous and is not.
 
-**4a — Fresh-context attack.** Save the draft to its final path (Step 6's location, confirmed with the user first), then spawn the `shipwright:sdd-adversary` agent. Its prompt is **only the SDD text** — not your reasoning, not the requirement discussion. The agent already carries the 10 failure classes and the output format:
+**4a — Fresh-context attack.** Save the draft to its final path (Step 6's location, confirmed with the user first), then spawn the `takshak:sdd-adversary` agent. Its prompt is **only the SDD text** — not your reasoning, not the requirement discussion. The agent already carries the 10 failure classes and the output format:
 
 | Class | Ask |
 |-------|-----|
@@ -103,13 +103,13 @@ Do not review your own draft in this context. You just wrote the mitigations; yo
 | Observability gaps | When this breaks at 3am, what tells you where? |
 | Backward compatibility | Existing callers, stored data, in-flight requests |
 
-If the SDD touches auth, secrets, PII or a public endpoint, also spawn `shipwright:security-reviewer` on the SDD in parallel and merge its findings.
+If the SDD touches auth, secrets, PII or a public endpoint, also spawn `takshak:security-reviewer` on the SDD in parallel and merge its findings.
 
 **4b — Build the Risk Register** from the findings. Severity: `Critical` (data loss, security, silent corruption), `High` (user-visible failure, no recovery path), `Medium` (degradation, operational pain).
 
 **4c — Revise** the SDD to mitigate every `Critical` and `High`. Mitigations go in the relevant body section, not only in the register; set each row's Status to `mitigated (§<section>)`.
 
-**4d — Re-attack** with a *new* `shipwright:sdd-adversary` on the revised SDD. Converged means: all 10 classes have a verdict **and** no new `Critical`/`High`.
+**4d — Re-attack** with a *new* `takshak:sdd-adversary` on the revised SDD. Converged means: all 10 classes have a verdict **and** no new `Critical`/`High`.
 
 **Cap at 3 attack passes.** If still unconverged, tell the user plainly which risks remain unmitigated and why. Do not keep looping, and do not fake convergence. Coverage, not vibes, is the exit condition.
 
@@ -117,7 +117,7 @@ If the SDD touches auth, secrets, PII or a public endpoint, also spawn `shipwrig
 ```bash
 bash "${CLAUDE_PLUGIN_ROOT}/hooks/run.sh" "${CLAUDE_PLUGIN_ROOT}/tools/metrics.py" record --project "${CLAUDE_PROJECT_DIR:-$PWD}" --event adversary_pass --data '{"passes": <N>, "risks_critical": <count>, "risks_high": <count>, "risks_medium": <count>, "converged": <true|false>, "sdd_path": "<sdd path>"}'
 ```
-This is what the dashboard and `/shipwright:doctor`-adjacent metrics use to show catch rate and convergence — record it whether or not the SDD converged.
+This is what the dashboard and `/takshak:doctor`-adjacent metrics use to show catch rate and convergence — record it whether or not the SDD converged.
 
 ### Step 5 — Write checkpoint
 Write `.claude/checkpoint.json`:
@@ -130,7 +130,7 @@ Write `.claude/checkpoint.json`:
   "phase": 3,
   "phase_label": "SDD hardened (<N> attack passes, <M> risks mitigated)",
   "files_modified_this_session": ["<sdd path>"],
-  "next_step": "Run /shipwright:breakdown <sdd path>",
+  "next_step": "Run /takshak:breakdown <sdd path>",
   "pending_decisions": [],
   "notes": ""
 }
@@ -161,8 +161,8 @@ Update `last_memory_write` in `.claude/task_state.json` (ISO-8601 UTC).
 ## Handoff
 End with the literal next command:
 ```
-Next: /shipwright:breakdown <sdd path>
+Next: /takshak:breakdown <sdd path>
 ```
 
 ## Downstream gate
-`/shipwright:breakdown` refuses an SDD with no Risk Register, an unaddressed failure class, or an unmitigated `Critical`.
+`/takshak:breakdown` refuses an SDD with no Risk Register, an unaddressed failure class, or an unmitigated `Critical`.

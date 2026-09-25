@@ -58,7 +58,7 @@ AGENTS = sorted(p.stem for p in (ROOT / "agents").glob("*.md"))
 def test_manifests() -> None:
     plugin = json.loads((ROOT / ".claude-plugin" / "plugin.json").read_text())
     market = json.loads((ROOT / ".claude-plugin" / "marketplace.json").read_text())
-    assert plugin["name"] == "shipwright"
+    assert plugin["name"] == "takshak"
     assert market["plugins"][0]["name"] == plugin["name"]
     assert market["plugins"][0]["source"] == "./"
 
@@ -78,7 +78,7 @@ def test_hooks_json_references_real_scripts_with_second_timeouts() -> None:
 def test_run_sh_invoked_via_bash_with_forward_slashes() -> None:
     """On Windows, Git Bash's MSYS runtime reparses the inherited command line itself and
     treats an unescaped backslash as an escape character -- a raw native Windows path
-    (D:\\shipwright\\hooks\\run.sh) gets silently mangled (D:shipwrighthooksrun.sh) and
+    (D:\\takshak\\hooks\\run.sh) gets silently mangled (D:takshakhooksrun.sh) and
     bash fails to find the file. The fix is forward slashes in every command string, never
     a literal backslash path. `bash` (not `sh`, which is not guaranteed to be on PATH) is
     the interpreter every hook and skill uses to invoke run.sh."""
@@ -110,14 +110,14 @@ def test_skills_reference_only_real_commands_and_agents() -> None:
     corpus = [p for p in ROOT.glob("skills/**/*.md")] + [ROOT / "templates" / "CLAUDE.md.template", ROOT / "README.md"]
     for path in corpus:
         text = path.read_text(encoding="utf-8")
-        for ref in re.findall(r"/shipwright:([a-z-]+)", text):
-            assert ref in SKILLS, f"{path.name} references missing /shipwright:{ref}"
-        for ref in re.findall(r"`shipwright:([a-z-]+)`", text):
-            assert ref in AGENTS or ref in SKILLS, f"{path.name} references missing agent shipwright:{ref}"
+        for ref in re.findall(r"/takshak:([a-z-]+)", text):
+            assert ref in SKILLS, f"{path.name} references missing /takshak:{ref}"
+        for ref in re.findall(r"`takshak:([a-z-]+)`", text):
+            assert ref in AGENTS or ref in SKILLS, f"{path.name} references missing agent takshak:{ref}"
         assert "run `/compact`" not in text and "run /compact" not in text, f"{path.name}: Claude cannot run /compact"
         for phantom in ("/remember ", "/review ", "/resume ", "/checkpoint clear"):
             for line in text.splitlines():
-                if phantom in line and "/shipwright:" not in line:
+                if phantom in line and "/takshak:" not in line:
                     raise AssertionError(f"{path.name}: un-namespaced {phantom.strip()} -> {line.strip()}")
 
 
@@ -134,8 +134,8 @@ def test_run_sh_passes_stdin_through(tmp_path: Path, interpreter: str) -> None:
 
     Every path is passed as forward-slash-only (`.as_posix()`), matching how hooks.json
     invokes run.sh -- never a raw native backslash path as a discrete argv element, which
-    on Windows/Git Bash gets reparsed by the MSYS runtime and mangled (D:\\shipwright\\...
-    -> D:shipwright...). That reparsing is specific to backslashes; forward slashes pass
+    on Windows/Git Bash gets reparsed by the MSYS runtime and mangled (D:\\takshak\\...
+    -> D:takshak...). That reparsing is specific to backslashes; forward slashes pass
     through a plain argv list unchanged, so no extra shell wrapping is needed here.
 
     The interpreter itself is resolved via `_resolve_git_bash()` rather than trusting a

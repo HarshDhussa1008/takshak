@@ -51,5 +51,5 @@ Implementation complete.
 Files created: <list>
 Files modified: <list>
 Tests: <count> test functions across <count> files
-Next: /shipwright:retro, then /shipwright:ship staging
+Next: /takshak:retro, then /takshak:ship staging
 ```

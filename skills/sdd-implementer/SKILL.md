@@ -1,6 +1,6 @@
 ---
 name: sdd-implementer
-description: Implement an approved shipwright plan task by task from its SDD, staying in the implement-bug-fix loop without process interruptions while silently staging design amendments and checkpointing. Use when the user says to implement, build, or continue a feature that has an SDD and an approved task list in .claude/task_state.json.
+description: Implement an approved takshak plan task by task from its SDD, staying in the implement-bug-fix loop without process interruptions while silently staging design amendments and checkpointing. Use when the user says to implement, build, or continue a feature that has an SDD and an approved task list in .claude/task_state.json.
 argument-hint: "[task id]"
 ---
 
@@ -73,5 +73,5 @@ When the user rewrites, reverts or corrects what you just produced, stage a `sty
 When every task is `completed`:
 ```
 Implementation complete. Files created: <list>. Files modified: <list>. Tests: <n>.
-Next: /shipwright:retro (while it's fresh), then /shipwright:ship staging
+Next: /takshak:retro (while it's fresh), then /takshak:ship staging
 ```

@@ -1,10 +1,10 @@
 ---
 name: checkpoint
-description: Show, write, or clear shipwright's resume checkpoint, or clear the current plan. Use when the user asks to save progress, discard an interrupted session, or abandon the current task plan.
+description: Show, write, or clear takshak's resume checkpoint, or clear the current plan. Use when the user asks to save progress, discard an interrupted session, or abandon the current task plan.
 argument-hint: "[show | save | clear | clear-plan]"
 ---
 
-# /shipwright:checkpoint
+# /takshak:checkpoint
 
 Action: `$ARGUMENTS` (default `show`).
 
