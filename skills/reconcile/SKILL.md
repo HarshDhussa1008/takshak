@@ -57,7 +57,7 @@ Touch only the sections in `stale_sections`, plus *Module map*, *Gist* and *Chan
 - *Tests* maps each behaviour to the test that asserts it and, where applicable, the Risk Register row it covers.
 
 ### Step 4 — Divergences from the SDD
-Compare what you just documented with the SDD's Architecture, Data Models, API Contracts, Detailed Design and Error Handling. Each mismatch becomes a row in *Divergences from the SDD*: what the SDD said, what the code does (`file:line`), why (if the Amendments log or a commit message explains it; otherwise `unexplained — ask`).
+Compare what you just documented with the SDD's Architecture, Data Models, API Contracts, Detailed Design and Error Handling, and — when `docs/lld/<slug>.md` exists — with the LLD's module specifications, signatures, schema and error mapping (the LLD is the finer-grained intent, so signature-level mismatches show up there). Each mismatch becomes a row in *Divergences from the SDD*: what the SDD said, what the code does (`file:line`), why (if the Amendments log or a commit message explains it; otherwise `unexplained — ask`).
 
 For every divergence **not already recorded in the SDD's `## Amendments`**, stage a candidate in `.claude/amendments_pending.json` using the standard shape (`timestamp`, `task_id`, `sdd_section`, `gap`, `affects_pending_tasks`) — silently, like sdd-implementer does. Do **not** edit the SDD body here; the existing flush and compaction rules fold amendments into it. Unexplained divergences are the ones a reviewer must see: list them in your report.
 

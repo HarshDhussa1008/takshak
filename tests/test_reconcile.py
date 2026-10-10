@@ -292,8 +292,8 @@ def test_reconcile_skill_and_ship_gate_are_wired() -> None:
     assert "reconcile.py\" mark" in skill and "--final" in skill
     ship = (ROOT / "skills" / "ship" / "SKILL.md").read_text(encoding="utf-8")
     assert "reconcile.py\" check" in ship
-    design = (ROOT / "skills" / "design" / "SKILL.md").read_text(encoding="utf-8")
-    assert "## Module Map" in design and "## Key Flows" in design
+    sdd_template = (ROOT / "templates" / "SDD.md.template").read_text(encoding="utf-8")
+    assert "## Module Map" in sdd_template and "## Key Flows" in sdd_template
 
 
 # ------------------------------------------------------------------ adopting an existing codebase

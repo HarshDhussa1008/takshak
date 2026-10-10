@@ -1,0 +1,82 @@
+# SDD: {{feature title}}
+
+> Design document (HLD). Decisions live in `docs/adr/`; discussion record in `docs/design-notes/`; the low-level
+> design is derived from this document once it is frozen: `docs/lld/`. Template placeholders are wrapped in double braces and must all be replaced.
+
+## Overview
+{{One paragraph: what this does, for whom, and why now.}}
+
+## Goals
+- {{Measurable outcome}}
+
+## Non-Goals
+- {{Explicit scope boundary}}
+
+## Requirements
+| ID | Requirement | Acceptance criterion | Priority |
+|----|-------------|----------------------|----------|
+| R1 | {{what the system must do}} | {{observable, testable condition}} | Must |
+| NFR1 | {{latency / availability / scale / cost target}} | {{number and how it is measured}} | Must |
+
+## Architecture
+```mermaid
+flowchart LR
+    {{ComponentA}} --> {{ComponentB}}
+```
+{{Two or three sentences: the shape, and the ADR numbers that explain the non-obvious choices (ADR-0001, ...).}}
+
+## Design Decisions
+| ADR | Decision | Status |
+|-----|----------|--------|
+| {{ADR-0001}} | {{one-line decision}} | {{accepted}} |
+
+## Module Map
+| Module / path | Responsibility | Depends on | Public surface |
+|---------------|----------------|------------|----------------|
+| `{{path}}` | {{one line}} | {{module or -}} | {{functions / routes}} |
+
+## Key Flows
+```mermaid
+sequenceDiagram
+    participant {{Caller}}
+    participant {{Module}}
+    {{Caller}}->>{{Module}}: {{happy path}}
+```
+Failure path: {{what happens when a dependency fails}}
+
+## Data Models
+{{Entities with field names, types, constraints and indexes -- or "No persistent data: <why>".}}
+
+## API Contracts
+{{Every interface other code or teams call: `METHOD /path`, auth, request fields (name: type, required), success response, every error response (status -> body -> when).}}
+
+## Detailed Design
+{{Only the 1-2 highest-risk modules, to signature level, and why those were chosen.}}
+
+## Error Handling
+{{Expected errors, how they surface, what is retried, what is not.}}
+
+## Observability
+{{Logs, metrics, traces; the alert that fires first at 3am and what it tells you.}}
+
+## Security
+{{Threat model: assets, entry points, trust boundaries, and for each of spoofing / tampering / repudiation / information disclosure / denial of service / privilege escalation either a mitigation or "not applicable: why". If no new attack surface, say so and why.}}
+
+## Rollout and Rollback
+{{How this ships (flag, canary, migration order), how to tell it is healthy, and exactly how to revert it -- including data.}}
+
+## Risk Register
+| Risk | Class | Severity | Mitigation | Status |
+|------|-------|----------|------------|--------|
+(Produced by adversarial hardening. Never hand-written in the first draft.)
+
+## Test Plan
+| Req | Test | Type |
+|-----|------|------|
+| R1 | {{test that proves it}} | {{unit / integration / e2e}} |
+
+## Amendments
+(Empty at design time.)
+
+## Open Questions
+- [ ] {{question}} -- owner: {{who}}

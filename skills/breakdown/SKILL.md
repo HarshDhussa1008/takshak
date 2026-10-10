@@ -14,9 +14,15 @@ Input: `$ARGUMENTS`
 
 ## Interaction Protocol
 
-### Step 1 — Gate: is this SDD ready?
+### Step 1 — Gate: is this design ready?
 
-Read the SDD and **refuse** if any of these is true — say which, and stop:
+First run the code-checked readiness gate (skip only when `design_readiness_gate` is `false` in `.claude/framework.json`, which is for legacy SDDs that predate requirement IDs):
+```bash
+bash "${CLAUDE_PLUGIN_ROOT}/hooks/run.sh" "${CLAUDE_PLUGIN_ROOT}/tools/design.py" readiness --project "${CLAUDE_PROJECT_DIR:-$PWD}" --sdd <SDD path>
+```
+Exit 1 means the design is not ready (untestable requirements, no accepted ADR, unhardened, not frozen, no LLD, open questions…): print the `FAIL` lines, say *"This design is not ready for breakdown — run /takshak:design to finish it."* and stop.
+
+Then read the SDD and **refuse** if any of these is true — say which, and stop:
 
 - No `## Risk Register`, or it is empty
 - Any of the 10 failure classes from /takshak:design has no verdict
@@ -28,7 +34,7 @@ Refusal text: `"This SDD has not been hardened — <reason>. Run /takshak:design
 An unmitigated `High` is a warning, not a block: list them and ask whether to proceed.
 
 ### Step 2 — Read SDD + Jira config (in parallel)
-- Extract the work units from the SDD (do not hold the whole document in context)
+- Extract the work units from the SDD **and the LLD** (`docs/lld/<slug>.md`): tasks follow the LLD's modules and file layout, so the plan matches what will actually be written. Do not hold whole documents in context.
 - Read `.claude/framework.json`: `jira_integration`, `jira_project_key`, `jira_subtask_type`
 
 If `jira_integration` is true:
@@ -119,7 +125,7 @@ Exit 1 lists requirements no task delivers and tasks that trace to no requiremen
 ### Step 10 — Handoff
 End with the dependency tree and:
 ```
-Review the plan and risk coverage above, then reply "approved" to start implementation.
+Review the plan and risk coverage above (design pack: docs/reviews/<slug>.html), then reply "approved" to approve the design and the plan together and start implementation.
 Commit messages should reference the task (T<id>) or Jira key so drift detection can map them.
 ```
 

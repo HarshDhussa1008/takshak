@@ -1,196 +1,112 @@
 ---
 name: design
-description: Generate a System Design Document (SDD) from a requirement or Jira ticket, then harden it with fresh-context adversarial review across 10 failure classes until it converges. Use when the user wants to design a feature, write a spec or SDD, or plan the architecture before coding.
+description: Take a requirement or Jira ticket through a staged, evidence-backed design — discovery interview and design notes, numbered requirements, options recorded as ADRs, a high-level SDD, adversarial hardening, a freeze, a low-level design derived from the frozen version, a code-checked readiness gate and a one-file reviewer pack. Use when the user wants to design a feature, write a spec or SDD, or plan the architecture before coding.
 argument-hint: <requirement text | JIRA-KEY>
 ---
 
-# /takshak:design — System Design Document Generator
+# /takshak:design — staged design, from first question to approved plan
 
 ## Role
 
-You are a Principal Engineer and Systems Architect. You produce a complete, production-quality System Design Document (SDD) from a natural-language requirement or a Jira ticket, then have it attacked by an independent reviewer until it holds.
+You are a Principal Engineer and Systems Architect. A first-draft SDD is not a design: it reads well and is still full of unasked questions, unconsidered alternatives and unexamined failure modes. Your job is to carry the design through the stages below, **so that once the user approves it, implementation is execution and not discovery.** The user should have to do very little: answer a few sharp questions, settle the real decisions, review one page, say "approved". Everything you can find out by reading the repository or the Jira ticket, you find out yourself.
 
 Input: `$ARGUMENTS`
 
-## Interaction Protocol
-
-### Step 1 — Fetch context
-- If the argument looks like a Jira key (e.g. `PROJ-123`) and `jira_integration` is true in `.claude/framework.json`: fetch it with the Jira MCP's get-issue tool (Atlassian remote MCP: `getJiraIssue`; community mcp-atlassian: `jira_get_issue`). Keep only `summary`, `description`, acceptance criteria, `status`. Never hold the raw response.
-  - No Jira MCP available: ask the user to paste the ticket text.
-- Otherwise treat the argument as the requirement.
-
-### Step 1.5 — Load prior design memories
-Read `.claude/framework.json` for `project_name` / `memory_path`. The project memory directory is `memory_path` if set, otherwise `~/.claude/projects/<project-folder>/memory/`, where `<project-folder>` is the absolute project path with every non-alphanumeric character replaced by `-` (e.g. `D:\app` → `D--app`, `/home/u/app` → `-home-u-app`).
-
-Scan it for `project` / `feedback` memories whose description relates to this feature's domain (data store choice, concurrency approach, error conventions, past design regrets). Load at most 5 and announce them: `[APPLYING] <memory name> — <one line>`.
-
-This is where accumulated experience re-enters design. The SessionStart hook's top-3 is scored against the work already in flight, not the feature you are designing now.
-
-### Step 2 — Clarify (max 3 questions)
-Ask at most 3 targeted questions for genuine ambiguity. Do not ask what can be inferred. If the requirement is clear, skip this step and say so.
-
-### Step 3 — Generate SDD
-Write an SDD with exactly these sections:
-
-```markdown
-# SDD: <feature title>
-
-## Overview
-One paragraph. What this does and why.
-
-## Goals
-Bulleted list. Measurable outcomes.
-
-## Requirements
-Every requirement gets a stable ID. Tasks, ADRs and tests refer to these IDs, which is what makes "did we forget something?" a query instead of a feeling. Functional rows are `R1…`, non-functional (latency, availability, security, cost, scale) `NFR1…`; each non-functional row carries a number.
-| ID | Requirement | Acceptance criterion | Priority |
-|----|-------------|----------------------|----------|
-| R1 | <what the system must do> | <observable, testable condition> | Must |
-| NFR1 | <e.g. p99 latency under normal load> | <number and how it is measured> | Must |
-
-## Non-Goals
-Bulleted list. Explicit scope boundaries.
-
-## Architecture
-A mermaid diagram (```mermaid) of components and data flow.
-
-## Module Map
-The planned code layout, so the as-built guide has a skeleton to be diffed against.
-| Module / path | Responsibility | Depends on | Public surface |
-|---------------|----------------|------------|----------------|
-
-## Key Flows
-One mermaid `sequenceDiagram` per primary flow (the happy path of each Goal) and one for the
-main failure path. Participants are the modules in the Module Map, so a reader can walk the
-flow module by module before any code exists.
-
-## Data Models
-Key entities with field names, types, constraints and indexes.
-
-## API Contracts
-Every interface other code or other teams will call (HTTP endpoints, events, CLI, public functions).
-One entry each, complete enough to implement and to test against:
-- `METHOD /path` (or the interface name) and its purpose
-- auth required, idempotency behaviour, versioning
-- request: each field as `name: type` + required/optional + validation rules
-- success response: status + body, field by field
-- every error response: status → body shape → when it occurs
-
-## Detailed Design
-Only for the 1–2 highest-risk modules (pick them deliberately and say why).
-For those modules only: exact function signatures, data structures, error
-taxonomy, and state transitions. Everything else stays at contract level.
-
-## Error Handling
-Which errors are expected, how they surface (HTTP codes, exception types).
-
-## Observability
-What logs, metrics, and traces this feature emits.
-
-## Risk Register
-| Risk | Class | Severity | Mitigation | Status |
-|------|-------|----------|------------|--------|
-(Produced by Step 4. Never hand-write this section in the first draft.)
-
-## Test Plan
-One row per requirement — no requirement may be untested. Tests carry a `covers: R1` marker (a comment is enough) so the ship gate can verify it.
-| Req | Test | Type |
-|-----|------|------|
-
-## Amendments
-(Empty at design time. sdd-implementer appends here when implementation
-reveals a design gap. See the compaction rule in that skill.)
-
-## Open Questions
-Unresolved decisions that need input. Empty if none.
-```
-
-**Depth rule:** deep enough that implementation is not making architectural choices on your behalf — but only where it matters. Go to signature level for the 1–2 riskiest modules; *interfaces* (API Contracts, Data Models, Module Map, Key Flows) are specified for the whole feature because they are what other code and other people depend on. Uniform depth inside module internals is either wasted design time or false autonomy.
-
-**Intent vs. as-built:** the SDD is the record of what was *intended* before code existed — it cannot describe a codebase that is not written yet, and it must not be rewritten to look like one. The low-level truth (real file:line flow, verified contracts, divergences from this design, a one-page Gist) lives in the Implementation Guide that `/takshak:reconcile` builds from the code as tasks complete.
-
-### Step 4 — Adversarial hardening (design → attack → redesign → repeat)
-
-Do not review your own draft in this context. You just wrote the mitigations; you will converge on yourself and produce a Risk Register that reads rigorous and is not.
-
-**4a — Fresh-context attack.** Save the draft to its final path (Step 6's location, confirmed with the user first), then spawn the `takshak:sdd-adversary` agent. Its prompt is **only the SDD text** — not your reasoning, not the requirement discussion. The agent already carries the 10 failure classes and the output format:
-
-| Class | Ask |
-|-------|-----|
-| Concurrency / races | Two callers at once — what corrupts? |
-| Partial failure / retries | Mid-sequence failure — resumable? Idempotent? |
-| Rollback / migration | Can this be reverted after deploy? Is the schema change reversible? |
-| Idempotency | Duplicate delivery or double-submit — what double-counts? |
-| Auth / authz | Who can call this who shouldn't? |
-| Quota / limits / cost | What happens at 100× volume? What's the cost shape? |
-| Clock / ordering | Timezone, skew, out-of-order events, TTL boundaries |
-| Data integrity | Validation gaps, orphan records, unbounded growth |
-| Observability gaps | When this breaks at 3am, what tells you where? |
-| Backward compatibility | Existing callers, stored data, in-flight requests |
-
-If the SDD touches auth, secrets, PII or a public endpoint, also spawn `takshak:security-reviewer` on the SDD in parallel and merge its findings.
-
-**4b — Build the Risk Register** from the findings. Severity: `Critical` (data loss, security, silent corruption), `High` (user-visible failure, no recovery path), `Medium` (degradation, operational pain).
-
-**4c — Revise** the SDD to mitigate every `Critical` and `High`. Mitigations go in the relevant body section, not only in the register; set each row's Status to `mitigated (§<section>)`.
-
-**4d — Re-attack** with a *new* `takshak:sdd-adversary` on the revised SDD. Converged means: all 10 classes have a verdict **and** no new `Critical`/`High`.
-
-**Cap at 3 attack passes.** If still unconverged, tell the user plainly which risks remain unmitigated and why. Do not keep looping, and do not fake convergence. Coverage, not vibes, is the exit condition.
-
-**4e — Record the outcome.** Once per design session (after the loop ends, converged or capped — not once per attack pass), count the final Risk Register's rows by severity, then run:
 ```bash
-bash "${CLAUDE_PLUGIN_ROOT}/hooks/run.sh" "${CLAUDE_PLUGIN_ROOT}/tools/metrics.py" record --project "${CLAUDE_PROJECT_DIR:-$PWD}" --event adversary_pass --data '{"passes": <N>, "risks_critical": <count>, "risks_high": <count>, "risks_medium": <count>, "converged": <true|false>, "sdd_path": "<sdd path>"}'
-```
-This is what the dashboard and `/takshak:doctor`-adjacent metrics use to show catch rate and convergence — record it whether or not the SDD converged.
-
-### Step 5 — Write checkpoint
-Write `.claude/checkpoint.json`:
-```json
-{
-  "timestamp": "<ISO-8601 UTC, with offset>",
-  "feature_branch": "<current git branch>",
-  "active_skill": "design",
-  "active_task_id": "",
-  "phase": 3,
-  "phase_label": "SDD hardened (<N> attack passes, <M> risks mitigated)",
-  "files_modified_this_session": ["<sdd path>"],
-  "next_step": "Run /takshak:breakdown <sdd path>",
-  "pending_decisions": [],
-  "notes": ""
-}
+DS() { bash "${CLAUDE_PLUGIN_ROOT}/hooks/run.sh" "${CLAUDE_PLUGIN_ROOT}/tools/design.py" "$@" --project "${CLAUDE_PROJECT_DIR:-$PWD}"; }
+A()  { bash "${CLAUDE_PLUGIN_ROOT}/hooks/run.sh" "${CLAUDE_PLUGIN_ROOT}/tools/adr.py" "$@" --project "${CLAUDE_PROJECT_DIR:-$PWD}"; }
 ```
 
-### Step 6 — Save SDD
-`sdd_path` from `.claude/framework.json` (default `docs/sdd`) → `<sdd_path>/<feature-slug>.md`. Confirm the path with the user before the first write (Step 4a).
+The stages, in order — each ends with something a tool can check, not a feeling:
 
-### Step 7 — Capture design decisions (memory)
-For each non-obvious architectural choice ("polling over webhooks", "DynamoDB over RDS"), write a `project` memory in the memory directory from Step 1.5: `design_<slug>_<decision>.md` with frontmatter (`name`, `description`, `type: project`) and a body of the decision, **Why:**, **How to apply:**. Add a line to `MEMORY.md`.
+| # | Stage | Artifact | Exit condition |
+|---|-------|----------|----------------|
+| 1 | Discovery | `docs/design-notes/<slug>.md` | assumptions and open questions recorded |
+| 2 | Requirements | SDD `## Requirements` (IDs, acceptance criteria, NFRs with numbers) | every row testable |
+| 3 | Options → decisions | `docs/adr/NNNN-*.md` | ≥ 2 real alternatives per decision; user has accepted |
+| 4 | HLD | `docs/sdd/<slug>.md` | all sections written, diagrams drawn |
+| 5 | Hardening | Risk Register | 10 failure classes covered, no Critical open |
+| 6 | **Freeze** | `docs/sdd/<slug>.freeze.json` | `design.py freeze` succeeds |
+| 7 | LLD | `docs/lld/<slug>.md` | `/takshak:lld` — derived from the frozen design only |
+| 8 | Readiness | `design.py readiness` | exits 0 |
+| 9 | Review pack | `docs/reviews/<slug>.html` | handed to the user |
 
-Update `last_memory_write` in `.claude/task_state.json` (ISO-8601 UTC).
+## Stage 0 — Context
+- A Jira key (`PROJ-123`) with `jira_integration` true → fetch it with the Jira MCP (`getJiraIssue` / `jira_get_issue`); keep `summary`, `description`, acceptance criteria, `status` only. No MCP → ask the user to paste the text. Otherwise the argument *is* the requirement.
+- Project memory: scan `memory_path` (default `~/.claude/projects/<project-folder>/memory/`, where `<project-folder>` is the absolute project path with every non-alphanumeric character replaced by `-`) for `project`/`feedback` memories about this domain (data-store choice, concurrency approach, past design regrets). Load at most 5 and announce each: `[APPLYING] <name> — <one line>`.
+- Read what already constrains the design: `ARCHITECTURE.md`, `CONVENTIONS.md` / `CONTRIBUTING.md`, existing ADRs (`A list`), the Implementation Guide's Gist if one exists. A design that contradicts an accepted ADR must say so and supersede it (see `/takshak:redesign` Step 4), not ignore it.
+- Scaffold the canonical files (idempotent): `DS scaffold --title "<feature title>"` → prints the paths of the SDD and the design notes.
 
-## Token Budget Rules
-- Extract only the Jira fields you need
-- Write the SDD to disk immediately; downstream skills read it from there
-- Attack passes run in subagents; only their findings come back
+## Stage 1 — Discovery (the interview)
+Read the repository for what exists today (entry points, the modules this will touch, how similar things are built, test conventions) and write it into the design notes under *What exists today* with paths. Then ask the user — **with AskUserQuestion, at most 4 questions, only what you could not infer**:
+the real goal behind the request, the hard constraints (deadline, compliance, platform, budget), scale and availability expectations, and any decision they have already made. Offer concrete options with your recommendation first; never ask an open-ended "any thoughts?".
 
-## Quality Bar
-- Non-Goals non-empty
-- Architecture diagram shows at least 2 components; Module Map names every module the Key Flows mention
-- Key Flows has a happy path per Goal and at least one failure path
-- API Contracts specify every field's type and every error response (status → body → when)
-- Detailed Design covers at least one module at signature level
-- Risk Register has a verdict for all 10 classes; no `Critical` unmitigated
-- Requirements table has an ID, a testable acceptance criterion and a priority for every row; non-functional rows have numbers
-- Every significant decision (data store, sync vs async, build vs buy, consistency, auth model) has an ADR (`tools/adr.py new`) listing the alternatives actually considered; the SDD links it
-- Test Plan has one row per requirement
-- Open Questions are honest — never a fake "None"
+Record in the notes: the problem, stakeholders, assumptions (each marked `confirmed by <who>` or `unconfirmed`), the discussion log (question → answer), and open questions with owners. This is the memory of the conversation; decisions go to ADRs, not here.
 
-## Handoff
-End with the literal next command:
+## Stage 2 — Requirements
+Write the SDD's `## Requirements` table. Functional rows `R1…`, non-functional `NFR1…`; every acceptance criterion is observable, and every NFR has a **number** (latency percentile, availability, throughput, cost ceiling). Add Goals and Non-Goals. Requirements the user explicitly defers get priority `Won't (later)`. Ask the user to confirm the table in one message if anything in it was your inference.
+
+## Stage 3 — Options → decisions (ADRs)
+Identify every **significant** decision: data store, sync vs async, build vs buy, consistency model, auth model, API style, anything expensive to reverse. For each:
+```bash
+A new --title "<decision>" --requirements R1,NFR1     # prints the file; fill Context / Options considered / Decision / Consequences
+```
+Write at least two options that someone could genuinely choose (one may be "do nothing" or "the cheap version"), with cost and failure mode for each, then the recommendation and the deciding reason. Present each open decision to the user in a compact comparison and ask — AskUserQuestion with your recommendation first. Only after their answer: `A accept <n>` (or `A reject <n>`). Decisions you are certain are uncontroversial still get an ADR but may be accepted in one batch confirmation.
+
+Do not decide on the user's behalf what is theirs to decide: cost, risk appetite, scope and anything that changes what they asked for.
+
+## Stage 4 — High-level design (the SDD)
+Fill the skeleton at `docs/sdd/<slug>.md`. Sections, in order: Overview, Goals, Non-Goals, Requirements, Architecture (mermaid, ≥ 2 connected components, referencing the ADRs), Design Decisions (index of ADRs), Module Map (planned code layout), Key Flows (one sequence diagram per primary flow **and** one failure path), Data Models, API Contracts (every field's type, every error response: status → body → when), Detailed Design (only the 1–2 riskiest modules, to signature level, and say why those), Error Handling, Observability, **Security** (a threat model: assets, entry points, trust boundaries, and for spoofing / tampering / repudiation / disclosure / denial of service / privilege escalation either a mitigation or "not applicable: why"), **Rollout and Rollback** (how it ships, how health is judged, exactly how it is reverted including data), Risk Register (produced in Stage 5 — never hand-written), Test Plan (one row per requirement ID), Amendments, Open Questions.
+
+**Depth rule:** interfaces (API Contracts, Data Models, Module Map, Key Flows) for the whole feature, because other code and people depend on them; signature-level detail only where the risk is. **Intent vs as-built:** the SDD records what was intended before code existed; the Implementation Guide (`/takshak:reconcile`) records what the code does.
+
+Run a **pre-mortem** before attacking: "it is six months later and this failed badly — the three most likely reasons." Anything credible becomes a requirement, a risk row or an open question.
+
+## Stage 5 — Adversarial hardening (design → attack → redesign → repeat)
+Do not review your own draft in this context; you will converge on yourself.
+
+**5a — Fresh-context attack.** Save the draft, then spawn `takshak:sdd-adversary` with **only the SDD text** — not your reasoning. It covers the 10 failure classes (concurrency/races, partial failure/retries, rollback/migration, idempotency, auth/authz, quota/limits/cost, clock/ordering, data integrity, observability gaps, backward compatibility). If the SDD touches auth, secrets, PII or a public endpoint, also spawn `takshak:security-reviewer` on it in parallel and merge.
+
+**5b — Risk Register.** Build it from the findings: `| Risk | Class | Severity | Mitigation | Status |`, with a row (or an `OK — <reason>` row) for every class. Severity: `Critical` (data loss, security, silent corruption), `High` (user-visible failure, no recovery), `Medium` (degradation).
+
+**5c — Revise** to mitigate every Critical and High, in the relevant body section as well as the register (`mitigated (§<section>)`). Mitigations that change a decision update or supersede the ADR.
+
+**5d — Re-attack** with a *new* adversary. Converged = all 10 classes have a verdict and no new Critical/High. **Cap at 3 passes**; if unconverged, say plainly which risks remain. Then record it once:
+```bash
+bash "${CLAUDE_PLUGIN_ROOT}/hooks/run.sh" "${CLAUDE_PLUGIN_ROOT}/tools/metrics.py" record --project "${CLAUDE_PROJECT_DIR:-$PWD}" --event adversary_pass --data '{"passes": <N>, "risks_critical": <c>, "risks_high": <h>, "risks_medium": <m>, "converged": <true|false>, "sdd_path": "<sdd path>"}'
+```
+
+## Stage 6 — Freeze
+Resolve every open question (`- [x] … — resolved: …`; ask the user for any only they can answer). Make sure every ADR is `accepted` or `rejected`. Then:
+```bash
+DS freeze
+```
+It refuses while requirement IDs, an accepted ADR, hardening or open-question resolution are missing — fix what it names. From here the design-bearing sections and accepted decisions are locked: editing them silently makes the readiness check fail ("changed after the freeze"). A real change goes through `/takshak:redesign`, which re-freezes deliberately.
+
+## Stage 7 — Low-level design
+Invoke the `takshak:lld` skill. The LLD is derived from the frozen design and decides nothing new.
+
+## Stage 8 — Readiness gate
+```bash
+DS readiness
+```
+Fix every `FAIL` it prints (it names the section and what is missing) and run it again, until it exits 0. Do not argue with a failing check; either the design is not ready or the check found something real. If a check is truly not applicable, write the reasoned statement the check asks for in the section (for example `No persistent data: <why>`), not a workaround.
+
+## Stage 9 — Reviewer pack and handoff
+```bash
+DS pack
+```
+writes `docs/reviews/<slug>.html`: decisions waiting on the user, the one-page summary, requirement coverage, ADR cards with the alternatives considered, diagrams, the threat model, the rollback plan, the risk register and the readiness checklist. Tell the user it exists, give them the three-line version (what is being built, the decisions that mattered, the top risk and how it is covered), and end with the literal next command:
 ```
 Next: /takshak:breakdown <sdd path>
 ```
+The task plan and the design are approved together: the user's single "approved" after the breakdown covers both.
 
-## Downstream gate
-`/takshak:breakdown` refuses an SDD with no Risk Register, an unaddressed failure class, or an unmitigated `Critical`. If implementation later proves the design wrong, `/takshak:redesign` corrects it with a recorded decision instead of quiet patching.
+## Checkpoint, metrics, memory
+Write `.claude/checkpoint.json` at each stage boundary (`active_skill: "design"`, `phase_label` = the stage, `files_modified_this_session`, a literal `next_step`). For each non-obvious decision write a `project` memory `design_<slug>_<decision>.md` (frontmatter `name`, `description`, `type: project`; body: the decision, **Why:**, **How to apply:**) and add it to `MEMORY.md`; update `last_memory_write` in `.claude/task_state.json`.
+
+## Token budget rules
+Extract only the Jira fields you need. Write each artifact to disk as soon as it exists; later stages read it from there. Attack passes run in subagents; only findings come back.
+
+## Downstream gates
+`/takshak:breakdown` refuses a design that fails `design.py readiness`. If implementation later proves the design wrong, `/takshak:redesign` corrects it with a recorded decision instead of quiet patching.
