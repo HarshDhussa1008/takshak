@@ -24,6 +24,13 @@ Read the new `.claude/framework.json` and ask, in one message, only about what i
 
 Edit `framework.json` with their answers.
 
+## Step 2.5 — Structure and architecture map
+Offer (one line) to lay down the canonical layout so every feature's documents land in the same places and the repo has a written architecture:
+```bash
+bash "${CLAUDE_PLUGIN_ROOT}/hooks/run.sh" "${CLAUDE_PLUGIN_ROOT}/tools/structure.py" scaffold --project "${CLAUDE_PROJECT_DIR:-$PWD}"
+```
+It creates `docs/{adr,sdd,lld,design-notes,implementation,reviews}/`, a starter `ARCHITECTURE.md` and `CONVENTIONS.md` (fill their `{{placeholders}}` by reading the repo — show the diff first) and `.claude/fitness.json`. On a repo that already has code, run `structure.py fitness --baseline` so today's violations are tolerated and only new ones fail.
+
 ## Step 3 — CLAUDE.md
 If CLAUDE.md was just created from the template, offer to fill its placeholders by reading the repo (entry points, stack, test layout) — show the diff before writing.
 

@@ -1,5 +1,5 @@
 {
-  "description": "Takshak pipeline hooks: session context, work-item and approval gates, quality gate, reconcile tracker, stop checklist",
+  "description": "Takshak pipeline hooks: session context, work-item and approval gates, quality gate, reconcile tracker, fitness gate, stop checklist",
   "hooks": {
     "SessionStart": [
       {
@@ -48,6 +48,11 @@
             "type": "command",
             "command": "bash \"${CLAUDE_PLUGIN_ROOT}/hooks/run.sh\" \"${CLAUDE_PLUGIN_ROOT}/hooks/reconcile_tracker.py\"",
             "timeout": 10
+          },
+          {
+            "type": "command",
+            "command": "bash \"${CLAUDE_PLUGIN_ROOT}/hooks/run.sh\" \"${CLAUDE_PLUGIN_ROOT}/hooks/fitness_gate.py\"",
+            "timeout": 20
           }
         ]
       }

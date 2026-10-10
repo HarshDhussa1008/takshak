@@ -1,0 +1,20 @@
+# Conventions: {{project name}}
+
+> How we write code here. Claude reads this at session start and follows it; reviewers cite it.
+> Anything that can be checked by a tool is checked by a tool (lint, types, `.claude/fitness.json`).
+
+## Naming and layout
+- {{Module and file naming; where new code of each kind goes}}
+
+## Errors and logging
+- {{How errors are raised, wrapped and surfaced; what is logged at which level; what must never be logged}}
+
+## Testing
+- {{Test layout, naming, what needs a unit test vs integration; mark tests with `# covers: R1` for the requirements they prove}}
+
+## Dependencies
+- {{How a new dependency is justified; what is banned}}
+
+## Changes, tickets and commits
+- Every change has a work item (and Jira ticket); commit messages carry the ticket key or task id.
+- {{Branch naming; review rules; definition of done}}

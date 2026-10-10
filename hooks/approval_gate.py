@@ -26,6 +26,7 @@ from typing import Any
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 
 import _design_change as design_change  # noqa: E402
+import _structure as structure  # noqa: E402
 import _work as work  # noqa: E402
 from _common import Project, emit, project_root, read_json, read_payload, run_safely  # noqa: E402
 
@@ -179,6 +180,11 @@ def main() -> None:
         if path == (project.state_dir / design_change.STATE_NAME).resolve() and is_change_self_approval(project, tool_name, tool_input):
             deny("Only the user can approve a design change. Ask them to review the delta and reply 'approved'; "
                  "a hook records it from their message.")
+            return
+
+    if tool_name == "Write" and config.get("structure_gate") is not False:
+        if misplaced := structure.write_violation(project, path, tool_name, tool_input):
+            deny(f"Document filed in the wrong place: {misplaced}")
             return
 
     sdd_dir = str(config.get("sdd_path") or "docs/sdd")

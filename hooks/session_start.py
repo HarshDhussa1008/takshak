@@ -243,6 +243,14 @@ def work_lines(project: Project) -> list[str]:
     return lines
 
 
+def convention_lines(project: Project) -> list[str]:
+    found = [n for n in ("ARCHITECTURE.md", "CONVENTIONS.md") if (project.root / n).is_file()]
+    if not found:
+        return []
+    return [f"[CONVENTIONS] Read {' and '.join(found)} before changing code: they define the layout, layering and style "
+            "this repo enforces (boundaries are checked from .claude/fitness.json after every edit)."]
+
+
 def design_change_lines(project: Project) -> list[str]:
     lines = []
     for item in design_change.blocking(project):
@@ -295,6 +303,7 @@ def main() -> None:
     for title, snippet in relevant_memories(memory_dir(project, payload), context_keywords(project, config, branch)):
         out.append(f"[MEMORY] {title}: {snippet}")
 
+    out.extend(convention_lines(project))
     out.extend(design_change_lines(project))
     out.extend(work_lines(project))
     out.extend(plan_lines(project))

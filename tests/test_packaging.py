@@ -84,7 +84,7 @@ def test_run_sh_invoked_via_bash_with_forward_slashes() -> None:
     the interpreter every hook and skill uses to invoke run.sh."""
     hooks_config = (ROOT / "hooks" / "hooks.json").read_text()
     assert "\\\\" not in hooks_config, "hooks.json command strings must use forward slashes only"
-    assert hooks_config.count('"bash \\"${CLAUDE_PLUGIN_ROOT}/hooks/run.sh\\"') == 6
+    assert hooks_config.count('"bash \\"${CLAUDE_PLUGIN_ROOT}/hooks/run.sh\\"') == 7
 
     for name in ("dashboard", "doctor", "init"):
         text = (ROOT / "skills" / name / "SKILL.md").read_text()

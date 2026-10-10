@@ -66,6 +66,9 @@ If the Stop hook or a prompt hook relays a **BUDGET** directive: write the check
 ### Correction capture (style signal)
 When the user rewrites, reverts or corrects what you just produced, stage a `style_candidates` entry (what you did, what they changed it to, the inferred rule). It is flushed into a `feedback` memory with the same batch. Nothing rewrites its own skill files; the signal re-enters at design time.
 
+### Structure and architecture rules
+Follow `ARCHITECTURE.md` and `CONVENTIONS.md` (session start points at them). After each edit the fitness hook reports any import that breaks a rule in `.claude/fitness.json`: fix the dependency; never edit the rule or its baseline to make a violation disappear. Documents go where `tools/structure.py check` expects them — the gate refuses an ADR, SDD or LLD written to the wrong directory.
+
 ## Critical Directives
 - **No placeholder logic** in critical paths: no `pass`, `TODO`, or stubs.
 - **Types** on every signature.

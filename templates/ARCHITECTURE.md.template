@@ -1,0 +1,25 @@
+# Architecture: {{project name}}
+
+> The map every engineer (and Claude) reads first. Keep it short and true; decisions and their
+> reasons live in `docs/adr/`, per-feature designs in `docs/sdd/` and `docs/lld/`, and what the
+> code really does in `docs/implementation/`. Enforced boundaries are in `.claude/fitness.json`.
+
+## What this system is
+{{Two or three sentences: what it does, for whom, and what it deliberately does not do.}}
+
+## Repository layout
+{{layout}}
+
+## Layers and boundaries
+{{The layers top to bottom and who may depend on whom, e.g. api -> services -> storage. Every rule written here should also exist as a rule in `.claude/fitness.json`.}}
+
+## Key flows
+{{One or two sentences per primary flow, pointing at the entry point file.}}
+
+## Decisions that shape everything
+- {{ADR-0001: one line}}
+
+## Running, testing, releasing
+- Run: {{command}}
+- Test: {{command}}
+- Release: {{how, and who approves}}

@@ -32,6 +32,7 @@ Confirm: "Shipping **<project_name>** to **<env>**. Proceed? (yes/no)"
 
 - Requirements are traced end to end: `bash "${CLAUDE_PLUGIN_ROOT}/hooks/run.sh" "${CLAUDE_PLUGIN_ROOT}/tools/trace.py" check --mode ship --project "${CLAUDE_PROJECT_DIR:-$PWD}"` exits 0 (every requirement has a task and a `covers:`-marked test; no orphan tasks). An SDD without requirement IDs passes with a note.
 - The decision log is sound: `tools/adr.py check` exits 0 (alternatives recorded, supersession links consistent).
+- The repository layout is consistent and the architecture rules hold: `tools/structure.py check` and `tools/structure.py fitness` both exit 0 (`fitness` ignores baselined violations; skip when there is no `.claude/fitness.json`).
 - No design change is still open: `tools/design_change.py status` shows none `open`/`proposed`/`approved`.
 
 FAIL on prod → hard stop. FAIL on staging → warn with the list, continue.

@@ -21,6 +21,7 @@ from typing import Any
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 
 import _design_change as design_change  # noqa: E402
+import _fitness as fitness  # noqa: E402
 import _reconcile as reconcile  # noqa: E402
 import _work as work  # noqa: E402
 from _common import (  # noqa: E402
@@ -120,6 +121,19 @@ def reconcile_item(project: Project) -> str | None:
     )
 
 
+def fitness_info(project: Project) -> str | None:
+    """Informational: architecture-rule violations in the files changed since the docs were last reconciled."""
+    if project.config().get("fitness_gate") is False or not fitness.load_rules(project)["rules"]:
+        return None
+    changed = set(reconcile.status(project).get("changed") or [])
+    if not changed:
+        return None
+    found = fitness.check(project, only=changed)
+    if not found:
+        return None
+    return f"{len(found)} architecture-rule violation(s) in changed files (first: {found[0]['rule']} in {found[0]['file']}): `tools/structure.py fitness`."
+
+
 def design_change_info(project: Project) -> list[str]:
     return [f"Design change {i['id']} is {i['status']} ('{i['title']}'): source edits stay blocked until it is applied (/takshak:redesign)."
             for i in design_change.blocking(project)]
@@ -209,6 +223,8 @@ def main() -> None:
     actions = [i for i in [budget_item(project), *amendment_items(project), checkpoint_item(project), reconcile_item(project)] if i]
     info = info_items(project)
     info.extend(design_change_info(project))
+    if fi := fitness_info(project):
+        info.append(fi)
     if wi := work_item_info(project):
         info.append(wi)
 
