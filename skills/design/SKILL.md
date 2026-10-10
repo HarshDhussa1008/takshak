@@ -41,6 +41,13 @@ One paragraph. What this does and why.
 ## Goals
 Bulleted list. Measurable outcomes.
 
+## Requirements
+Every requirement gets a stable ID. Tasks, ADRs and tests refer to these IDs, which is what makes "did we forget something?" a query instead of a feeling. Functional rows are `R1…`, non-functional (latency, availability, security, cost, scale) `NFR1…`; each non-functional row carries a number.
+| ID | Requirement | Acceptance criterion | Priority |
+|----|-------------|----------------------|----------|
+| R1 | <what the system must do> | <observable, testable condition> | Must |
+| NFR1 | <e.g. p99 latency under normal load> | <number and how it is measured> | Must |
+
 ## Non-Goals
 Bulleted list. Explicit scope boundaries.
 
@@ -86,9 +93,9 @@ What logs, metrics, and traces this feature emits.
 (Produced by Step 4. Never hand-write this section in the first draft.)
 
 ## Test Plan
-One row per Goal — no Goal may be untested.
-| Goal | Test | Type |
-|------|------|------|
+One row per requirement — no requirement may be untested. Tests carry a `covers: R1` marker (a comment is enough) so the ship gate can verify it.
+| Req | Test | Type |
+|-----|------|------|
 
 ## Amendments
 (Empty at design time. sdd-implementer appends here when implementation
@@ -174,7 +181,9 @@ Update `last_memory_write` in `.claude/task_state.json` (ISO-8601 UTC).
 - API Contracts specify every field's type and every error response (status → body → when)
 - Detailed Design covers at least one module at signature level
 - Risk Register has a verdict for all 10 classes; no `Critical` unmitigated
-- Test Plan has one row per Goal
+- Requirements table has an ID, a testable acceptance criterion and a priority for every row; non-functional rows have numbers
+- Every significant decision (data store, sync vs async, build vs buy, consistency, auth model) has an ADR (`tools/adr.py new`) listing the alternatives actually considered; the SDD links it
+- Test Plan has one row per requirement
 - Open Questions are honest — never a fake "None"
 
 ## Handoff
@@ -184,4 +193,4 @@ Next: /takshak:breakdown <sdd path>
 ```
 
 ## Downstream gate
-`/takshak:breakdown` refuses an SDD with no Risk Register, an unaddressed failure class, or an unmitigated `Critical`.
+`/takshak:breakdown` refuses an SDD with no Risk Register, an unaddressed failure class, or an unmitigated `Critical`. If implementation later proves the design wrong, `/takshak:redesign` corrects it with a recorded decision instead of quiet patching.

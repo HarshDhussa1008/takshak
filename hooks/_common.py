@@ -48,6 +48,7 @@ DEFAULT_CONFIG: dict[str, Any] = {
     "gate_extensions": [".py"],
     "approval_gate": True,
     "work_item_gate": True,
+    "adr_path": "docs/adr",
     "budget_alert_threshold": 95,
     "sdd_path": "docs/sdd",
     "reconcile": True,

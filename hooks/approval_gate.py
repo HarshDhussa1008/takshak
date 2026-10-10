@@ -25,10 +25,12 @@ from typing import Any
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 
+import _design_change as design_change  # noqa: E402
 import _work as work  # noqa: E402
 from _common import Project, emit, project_root, read_json, read_payload, run_safely  # noqa: E402
 
 APPROVED_TRUE = re.compile(r'"approved"\s*:\s*true')
+CHANGE_APPROVED = re.compile(r'"status"\s*:\s*"approved"')
 
 
 def deny(reason: str) -> None:
@@ -71,6 +73,20 @@ def is_self_approval(project: Project, tool_name: str, tool_input: dict[str, Any
         ):
             return True
     return False
+
+
+def is_change_self_approval(project: Project, tool_name: str, tool_input: dict[str, Any]) -> bool:
+    """Claude writing "status": "approved" into design_changes.json is approving its own design change."""
+    content = str(tool_input.get("content", "")) if tool_name == "Write" else ""
+    if tool_name == "Write":
+        before = project.state_dir / design_change.STATE_NAME
+        old = before.read_text(encoding="utf-8") if before.is_file() else ""
+        return len(CHANGE_APPROVED.findall(content)) > len(CHANGE_APPROVED.findall(old))
+    edits = tool_input.get("edits") if tool_name == "MultiEdit" else [tool_input]
+    return any(
+        isinstance(e, dict) and CHANGE_APPROVED.search(str(e.get("new_string", ""))) and not CHANGE_APPROVED.search(str(e.get("old_string", "")))
+        for e in edits or []
+    )
 
 
 def is_planning_artifact(project: Project, path: Path, sdd_dir: str) -> bool:
@@ -147,6 +163,9 @@ def main() -> None:
                 and read_json(project.task_state).get("approved") is not True:
             deny("Only the user can approve the plan. Ask them to reply 'approved'; a hook sets the flag.")
             return
+        if path == (project.state_dir / design_change.STATE_NAME).resolve() and CHANGE_APPROVED.search(command):
+            deny("Only the user can approve a design change. Ask them to reply 'approved'; a hook records it.")
+            return
     else:
         path = target_path(project, tool_input)
         if path is None:
@@ -157,6 +176,10 @@ def main() -> None:
                 "reply 'approved'; a hook sets the flag from their message."
             )
             return
+        if path == (project.state_dir / design_change.STATE_NAME).resolve() and is_change_self_approval(project, tool_name, tool_input):
+            deny("Only the user can approve a design change. Ask them to review the delta and reply 'approved'; "
+                 "a hook records it from their message.")
+            return
 
     sdd_dir = str(config.get("sdd_path") or "docs/sdd")
     if raw_is_patch(path, project, tool_name, tool_input):
@@ -164,6 +187,20 @@ def main() -> None:
     else:
         planning = is_planning_artifact(project, path, sdd_dir)
     if planning:
+        return
+
+    if pending := design_change.blocking(project):
+        first = pending[0]
+        verb = {
+            "open": "is being analysed -- finish the analysis, write the ADR and run `design_change.py propose`",
+            "proposed": "is waiting for the user's approval",
+            "approved": "is approved but not yet applied -- update the SDD, tasks and tests, then run `design_change.py apply`",
+        }[first["status"]]
+        deny(
+            f"Design change {first['id']} ('{first['title']}') {verb}, so source edits are blocked until it is "
+            "applied: the design is being corrected before more code is built on it. Planning artifacts "
+            "(SDD, ADRs, docs) stay writable. Use /takshak:redesign."
+        )
         return
 
     state = read_json(project.task_state)

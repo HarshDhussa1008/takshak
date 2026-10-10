@@ -21,6 +21,7 @@ from typing import Any
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 
+import _design_change as design_change  # noqa: E402
 import _reconcile as reconcile  # noqa: E402
 import _work as work  # noqa: E402
 from _common import (  # noqa: E402
@@ -242,6 +243,14 @@ def work_lines(project: Project) -> list[str]:
     return lines
 
 
+def design_change_lines(project: Project) -> list[str]:
+    lines = []
+    for item in design_change.blocking(project):
+        lines.append(f"[DESIGN CHANGE] {item['id']} ({item['status']}): {item['title']} -- source edits are blocked until it is applied; "
+                     "continue with /takshak:redesign." + (" Waiting for the user's 'approved'." if item["status"] == "proposed" else ""))
+    return lines
+
+
 def plan_lines(project: Project) -> list[str]:
     state = read_json(project.task_state)
     tasks = state.get("tasks") or []
@@ -286,6 +295,7 @@ def main() -> None:
     for title, snippet in relevant_memories(memory_dir(project, payload), context_keywords(project, config, branch)):
         out.append(f"[MEMORY] {title}: {snippet}")
 
+    out.extend(design_change_lines(project))
     out.extend(work_lines(project))
     out.extend(plan_lines(project))
     out.extend(guide_lines(project))

@@ -22,6 +22,9 @@ Implementation is implement → bug → fix → bug → fix. That loop is the no
 
 The quality-gate hook reports lint and type findings after each edit as additional context. Fix them in the same loop; they are not questions for the user.
 
+### When the design itself is wrong → `/takshak:redesign`
+Staging an amendment is for *small* gaps the design can absorb. If the fix would overturn a decision (an accepted ADR), change a contract other code or teams depend on, change a requirement, or invalidate several pending tasks, **stop and invoke `takshak:redesign`** instead of patching around it. The gate blocks source edits while a design change is open — that pause is the point: the correction is recorded as an ADR and approved before more code is built on the flaw. Bugs in the code (not the design) stay in the loop below.
+
 ### Amendment staging (never inline)
 
 After a fix lands, evaluate one structural signal: **did the fix change an interface, a contract, a data shape, or a behavior the SDD explicitly specified?**
@@ -67,7 +70,7 @@ When the user rewrites, reverts or corrects what you just produced, stage a `sty
 - **No placeholder logic** in critical paths: no `pass`, `TODO`, or stubs.
 - **Types** on every signature.
 - **Name things clearly** instead of writing docblocks.
-- **Tests in the same pass** as the implementation, covering the risks the task `mitigates`.
+- **Tests in the same pass** as the implementation, covering the risks the task `mitigates`. Mark each test with the requirements it proves — `# covers: R1, R3` (or `// covers: R1`) — so `tools/trace.py check --mode ship` can show nothing was left untested.
 
 ## Handoff
 When every task is `completed`, run the closing pass — invoke `takshak:reconcile` with `final` — then:

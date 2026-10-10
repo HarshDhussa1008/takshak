@@ -20,6 +20,7 @@ from typing import Any
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 
+import _design_change as design_change  # noqa: E402
 import _reconcile as reconcile  # noqa: E402
 import _work as work  # noqa: E402
 from _common import (  # noqa: E402
@@ -119,6 +120,11 @@ def reconcile_item(project: Project) -> str | None:
     )
 
 
+def design_change_info(project: Project) -> list[str]:
+    return [f"Design change {i['id']} is {i['status']} ('{i['title']}'): source edits stay blocked until it is applied (/takshak:redesign)."
+            for i in design_change.blocking(project)]
+
+
 def work_item_info(project: Project) -> str | None:
     """Informational (never blocks): an open work item whose edits have landed should be closed
     or carried forward, so the ledger does not fill with zombies."""
@@ -202,6 +208,7 @@ def main() -> None:
     memo = hook_state(project)
     actions = [i for i in [budget_item(project), *amendment_items(project), checkpoint_item(project), reconcile_item(project)] if i]
     info = info_items(project)
+    info.extend(design_change_info(project))
     if wi := work_item_info(project):
         info.append(wi)
 

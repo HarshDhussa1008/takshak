@@ -19,6 +19,7 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 
+import _design_change as design_change  # noqa: E402
 import _work as work  # noqa: E402
 from _common import (  # noqa: E402
     Project,
@@ -38,6 +39,14 @@ APPROVAL_RE = re.compile(r"^\s*(approved?|lgtm)\b", re.IGNORECASE)
 def capture_approval(project: Project, prompt: str) -> str | None:
     if not APPROVAL_RE.match(prompt or ""):
         return None
+    if changes := design_change.approve_proposed(project):
+        ids = ", ".join(c["id"] for c in changes)
+        record_metric(project, "design_change_approved", ids=[c["id"] for c in changes])
+        return (
+            f"[APPROVAL] The user approved design change {ids}. Apply it now: update the SDD, tasks and tests to the "
+            "approved decision (/takshak:redesign step 8), then run `design_change.py apply`. Source edits are unblocked "
+            "only after it is applied."
+        )
     state = read_json(project.task_state)
     if not state.get("tasks") or state.get("approved") is True:
         return None

@@ -29,7 +29,7 @@ Severity:
 - `High` — user-visible failure with no recovery path
 - `Medium` — degradation or operational pain
 
-Also flag: Goals with no test in the Test Plan, and Open Questions that are faked as "None".
+Also flag: Goals or requirements with no test in the Test Plan, and Open Questions that are faked as "None".
 
 Output exactly this, and nothing else:
 

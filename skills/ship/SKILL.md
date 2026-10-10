@@ -30,6 +30,10 @@ Confirm: "Shipping **<project_name>** to **<env>**. Proceed? (yes/no)"
 - No `Critical` risk is unmitigated.
 - The Implementation Guide is in sync with the code: `bash "${CLAUDE_PLUGIN_ROOT}/hooks/run.sh" "${CLAUDE_PLUGIN_ROOT}/tools/reconcile.py" check --project "${CLAUDE_PROJECT_DIR:-$PWD}"` exits 0 (skip when `reconcile` is `false`). Exit 1 means the docs are behind the code — run `/takshak:reconcile final` first.
 
+- Requirements are traced end to end: `bash "${CLAUDE_PLUGIN_ROOT}/hooks/run.sh" "${CLAUDE_PLUGIN_ROOT}/tools/trace.py" check --mode ship --project "${CLAUDE_PROJECT_DIR:-$PWD}"` exits 0 (every requirement has a task and a `covers:`-marked test; no orphan tasks). An SDD without requirement IDs passes with a note.
+- The decision log is sound: `tools/adr.py check` exits 0 (alternatives recorded, supersession links consistent).
+- No design change is still open: `tools/design_change.py status` shows none `open`/`proposed`/`approved`.
+
 FAIL on prod → hard stop. FAIL on staging → warn with the list, continue.
 
 ### Gate 1 — Tests

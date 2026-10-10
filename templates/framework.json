@@ -20,6 +20,7 @@
   ],
   "approval_gate": true,
   "work_item_gate": true,
+  "adr_path": "docs/adr",
   "budget_alert_threshold": 95,
   "sdd_path": "docs/sdd",
   "memory_path": null,
