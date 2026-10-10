@@ -62,6 +62,7 @@ DEFAULT_CONFIG: dict[str, Any] = {
     "reconcile": True,
     "reconcile_edit_threshold": 5,
     "impl_doc_path": "docs/implementation",
+    "onboarding_path": "docs/onboarding",
     "reconcile_docs": [],
     "memory_path": None,
     "languages": ["python"],

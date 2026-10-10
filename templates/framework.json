@@ -38,5 +38,6 @@
   "reconcile": true,
   "reconcile_edit_threshold": 5,
   "impl_doc_path": "docs/implementation",
+  "onboarding_path": "docs/onboarding",
   "reconcile_docs": []
 }

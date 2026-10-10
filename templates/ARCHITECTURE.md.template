@@ -2,10 +2,18 @@
 
 > The map every engineer (and Claude) reads first. Keep it short and true; decisions and their
 > reasons live in `docs/adr/`, per-feature designs in `docs/sdd/` and `docs/lld/`, and what the
-> code really does in `docs/implementation/`. Enforced boundaries are in `.claude/fitness.json`.
+> code really does in `docs/implementation/`; the newcomer walkthrough is `docs/onboarding/`. Enforced boundaries are in `.claude/fitness.json`.
 
 ## What this system is
 {{Two or three sentences: what it does, for whom, and what it deliberately does not do.}}
+
+## System context
+{{A diagram of what triggers this system, what it depends on and what it produces; name the real external systems.}}
+```mermaid
+flowchart LR
+    {{Trigger}} --> {{System}}
+    {{System}} --> {{Store}}
+```
 
 ## Repository layout
 {{layout}}

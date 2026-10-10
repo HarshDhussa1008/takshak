@@ -1,6 +1,6 @@
 ---
 name: reconcile
-description: Build or refresh the as-built Implementation Guide (API contracts, module map, control flow, data models, divergences from the SDD, and a one-page Gist) from the code — after a task completes, or to reverse-engineer documentation for an existing codebase that has none (adopt). Use when the Stop hook asks for it, when docs may have drifted, or when someone asks "document this codebase", "what was actually built" or "what should I read to understand this".
+description: Build or refresh the as-built Implementation Guide from the code (API contracts, module map, control flow, data models, divergences from the SDD, a one-page Gist) plus a newcomer walkthrough with flow diagrams, a glossary and exercises — after a task completes, or to reverse-engineer documentation for an existing codebase that has none (adopt). Use when the Stop hook asks for it, when someone wants documentation a junior engineer could learn the code from, when docs may have drifted, or when someone asks "document this codebase", "what was actually built" or "what should I read to understand this".
 argument-hint: "[task <id> | full | final | adopt [path]]"
 ---
 
@@ -113,7 +113,7 @@ Start from `${CLAUDE_PLUGIN_ROOT}/templates/IMPLEMENTATION.md.template`. Name it
 - Replace *Divergences from the SDD* with **Inferred intent and open questions**: behaviours the code implies but nothing documents (implicit invariants, retry/timeout choices, magic numbers), places the README or docs contradict the code, dead or unreachable code candidates, `TODO`/`FIXME`/`NotImplemented` markers, error paths with no tests, and security-relevant observations (unauthenticated routes, secrets in config). Each row cites `file:line` and says what a maintainer should confirm.
 - In *Tests*, list what is covered and — explicitly — what is not.
 - Mark inference as `inferred` and anything you could not confirm as `unverified`. A smaller, true guide beats a complete, plausible one.
-- Write the Gist last (Step 6); it must say how much of the codebase the guide covers (`N of M modules`) so nobody mistakes a partial pass for a full one.
+- Then write the newcomer walkthrough (next section). Write the Gist last (Step 6); it must say how much of the codebase the guide covers (`N of M modules`) so nobody mistakes a partial pass for a full one.
 
 ### A5 — Verify and record
 Spot-check citations (Step 7.1) — for an adopted codebase also verify every entry point and every API contract row. Then record the guide's location and baseline in one step:
@@ -123,6 +123,25 @@ bash "${CLAUDE_PLUGIN_ROOT}/hooks/run.sh" "${CLAUDE_PLUGIN_ROOT}/tools/reconcile
 From here on the normal incremental flow applies: every later change is detected against this baseline and refreshed with `/takshak:reconcile`. Report as in Step 8, with `Divergences` replaced by the count of open questions and the coverage (`N of M modules`). Offer — do not start — the follow-ups the guide makes cheap: writing an SDD for the next change against this guide, or documenting the next service.
 
 **One guide per project.** takshak tracks a single guide per project directory; for a monorepo, adopt each service from its own project root, or accept one guide scoped to one `path`.
+
+## The newcomer walkthrough (written in adopt mode and on `full`)
+
+The Implementation Guide is the precise reference. Alongside it, reconcile writes `docs/onboarding/<slug>.md`: a walkthrough that teaches the code in the order a first-week engineer should learn it. Judged by one test: could someone with no context make a small correct change after reading it? It is written from the same fact sheets, so it costs one extra writing pass, not a second read of the repo. Incremental task reconciles leave it alone; `full` and `adopt` refresh it.
+
+```bash
+ON() { bash "${CLAUDE_PLUGIN_ROOT}/hooks/run.sh" "${CLAUDE_PLUGIN_ROOT}/tools/onboard.py" "$@" --project "${CLAUDE_PROJECT_DIR:-$PWD}"; }
+ON scaffold --name "<name>"      # docs/onboarding/<slug>.md from the template
+```
+
+Fill the sections in the template's order: start here with a reading order, a mermaid `flowchart` of the system (real triggers, stores, external services), a glossary of every term and acronym, the repository tour, **one common run followed end to end** (numbered steps and a `sequenceDiagram`, plus the main failure path), data and state (a `stateDiagram-v2` when records have states), a module-by-module walkthrough entry point first (job, key functions, why it is like this, watch out), configuration, how to run, test and debug, sharp edges, recipes for the changes people actually make, open questions, and at least two exercises.
+
+Rules: every claim cites `file:line`; a "why" is quoted from a comment, commit or doc, or written `unknown -- ask`; section 9 says what was run and what was only read; never quote secrets and skip `keys/`, `.env*` and credential files; for a repo of unrelated tools write one guide per folder (`--name`, `--path`). State coverage honestly (`6 of 9 modules`). Then:
+
+```bash
+ON check
+```
+
+It fails on a missing section, a missing flowchart or sequence diagram, leftover `{{placeholders}}`, no stated coverage, a thin glossary or exercise list, fewer than 8 citations, and any citation to a file or line that does not exist. Fix what it prints and run it again until it exits 0. In the report, add the path, the coverage, the top three sharp edges and the open questions only a maintainer can answer. If `ARCHITECTURE.md` has no diagram, offer to add one from section 2 of the walkthrough.
 
 ## Rules
 - Code is truth. If code and SDD disagree, document the code and flag the divergence — do not "fix" either side on your own.

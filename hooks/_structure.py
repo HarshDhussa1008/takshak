@@ -10,6 +10,7 @@ recognises documents by what they *are* (their heading), and reports what is out
     docs/lld/<slug>.md             low-level design     (# LLD: ...)
     docs/design-notes/<slug>.md    discussion record    (# Design notes: ...)
     docs/implementation/<slug>.md  as-built guide       (# Implementation Guide: ...)
+    docs/onboarding/<slug>.md      newcomer walkthrough (# Onboarding Guide: ...)
     docs/reviews/<slug>.html       reviewer packs
     ARCHITECTURE.md, CONVENTIONS.md at the repository root
 """
@@ -28,6 +29,7 @@ HEADING_KINDS = (
     (re.compile(r"^#\s*LLD\b", re.IGNORECASE), "lld"),
     (re.compile(r"^#\s*Design notes\b", re.IGNORECASE), "notes"),
     (re.compile(r"^#\s*Implementation Guide\b", re.IGNORECASE), "impl"),
+    (re.compile(r"^#\s*Onboarding Guide\b", re.IGNORECASE), "guide"),
 )
 KEBAB = re.compile(r"^[a-z0-9]+(?:-[a-z0-9]+)*$")
 ADR_NAME = re.compile(r"^\d{4}-[a-z0-9]+(?:-[a-z0-9]+)*$")
@@ -47,7 +49,7 @@ def dirs(project: Project) -> dict[str, str]:
     return {
         "adr": d("adr_path", "docs/adr"), "sdd": d("sdd_path", "docs/sdd"), "lld": d("lld_path", "docs/lld"),
         "notes": d("notes_path", "docs/design-notes"), "impl": d("impl_doc_path", "docs/implementation"),
-        "reviews": d("review_path", "docs/reviews"),
+        "reviews": d("review_path", "docs/reviews"), "guide": d("onboarding_path", "docs/onboarding"),
     }
 
 
@@ -70,8 +72,8 @@ def location_problem(project: Project, rel: str, text: str) -> dict[str, str] | 
         hint = {"adr": "create it with `tools/adr.py new` so it gets the next number",
                 "sdd": "scaffold it with `tools/design.py scaffold`",
                 "lld": "write it with /takshak:lld", "notes": "scaffold it with `tools/design.py scaffold`",
-                "impl": "write it with /takshak:reconcile"}[kind]
-        return {"rule": "misplaced-doc", "path": rel, "message": f"this is a {kind.upper() if kind != 'impl' else 'implementation guide'} but it lives in {parent or '/'}; "
+                "impl": "write it with /takshak:reconcile", "guide": "write it with /takshak:reconcile"}[kind]
+        return {"rule": "misplaced-doc", "path": rel, "message": f"this is a { {'impl': 'implementation guide', 'guide': 'onboarding guide'}.get(kind, kind.upper()) } but it lives in {parent or '/'}; "
                 f"it belongs in {where}/ ({hint})", "severity": "error"}
     return None
 
