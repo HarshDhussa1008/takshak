@@ -22,6 +22,7 @@ from typing import Any
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 
 import _design_change as design_change  # noqa: E402
+import _flow as flow  # noqa: E402
 import _reconcile as reconcile  # noqa: E402
 import _work as work  # noqa: E402
 from _common import (  # noqa: E402
@@ -303,6 +304,9 @@ def main() -> None:
     for title, snippet in relevant_memories(memory_dir(project, payload), context_keywords(project, config, branch)):
         out.append(f"[MEMORY] {title}: {snippet}")
 
+    nxt = flow.next_step(project)
+    if nxt["stage"] != "idle":
+        out.append(flow.line(nxt))
     out.extend(convention_lines(project))
     out.extend(design_change_lines(project))
     out.extend(work_lines(project))

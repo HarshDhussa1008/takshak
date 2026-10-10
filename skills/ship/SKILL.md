@@ -81,6 +81,8 @@ Branch: <branch> | <timestamp> | Tasks: <keys>
 bash "${CLAUDE_PLUGIN_ROOT}/hooks/run.sh" "${CLAUDE_PLUGIN_ROOT}/tools/metrics.py" record --project "${CLAUDE_PROJECT_DIR:-$PWD}" --event ship --data '{"env": "<env>", "result": "pass"}'
 ```
 
+On success, record the stage: `bash "${CLAUDE_PLUGIN_ROOT}/hooks/run.sh" "${CLAUDE_PLUGIN_ROOT}/tools/flow.py" mark shipped --project "${CLAUDE_PROJECT_DIR:-$PWD}"` (staging counts; a prod ship after a staging ship simply marks it again).
+
 ### Step 6 — Failure memory + Jira comment
 Every failed gate writes a `project` memory (see /takshak:remember for the format) and, if Jira is on, comments on the parent:
 ```

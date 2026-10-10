@@ -21,6 +21,7 @@
   "approval_gate": true,
   "work_item_gate": true,
   "adr_path": "docs/adr",
+  "autopilot": "suggest",
   "structure_gate": true,
   "fitness_gate": true,
   "layout_extra_dirs": [],

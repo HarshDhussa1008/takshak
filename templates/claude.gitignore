@@ -5,6 +5,8 @@ anti_pattern_registry.json
 amendments_pending.json
 reconcile_state.json
 work_items.json
+flow_state.json
+flow_state.json.tmp
 work_items.json.tmp
 reconcile_state.json.tmp
 reconcile_index.tmp

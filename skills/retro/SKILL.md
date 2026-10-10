@@ -53,6 +53,11 @@ Branch: <branch> | Memories written: <n>
 Jira status changes on /takshak:ship.
 ```
 
+### Step 6.5 — Record the stage
+```bash
+bash "${CLAUDE_PLUGIN_ROOT}/hooks/run.sh" "${CLAUDE_PLUGIN_ROOT}/tools/flow.py" mark retro --project "${CLAUDE_PROJECT_DIR:-$PWD}"
+```
+
 ### Step 7 — Summary
 ```
 Retro complete. <N> memories written. CLAUDE.md updated. <M> stale memories flagged.

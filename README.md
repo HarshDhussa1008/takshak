@@ -5,9 +5,14 @@
 A structured engineering pipeline for [Claude Code](https://code.claude.com), packaged as a plugin. Design → adversarial review → break down → implement → ship, with Jira sync, an enforced approval gate, a quality gate on every edit, rate-limit protection, a live dashboard with pipeline metrics, and a guided review for anyone walking in cold.
 
 ```
-/takshak:design  →  /takshak:breakdown  →  "approved"  →  implement  ⟲  /takshak:reconcile  →  /takshak:retro  →  /takshak:ship
- (SDD + hardening)      (tasks + Jira)            (you, not     (bug loop)   (as-built guide,        (memories)         (gates + Jira
-                                                    Claude)                  after every task)                          transitions)
+/takshak:start  ─ one entry point; reads the state and takes the next step that is Claude's to take
+      │
+      ├─ any code change ──► /takshak:work   (work item + Jira ticket sized to the work; bug / change / trivial lanes)
+      │
+      └─ feature or solution ─► /takshak:design  (discovery → requirements → ADRs → HLD → hardening → FREEZE → LLD → readiness → review pack)
+                                      │
+                                /takshak:breakdown ─► "approved" ─► implement ⟲ /takshak:reconcile ─► /takshak:retro ─► /takshak:ship
+                                (tasks ↔ requirements)  (you)        │  design wrong? /takshak:redesign (ADR + your approval)
 ```
 
 **The design principle:** you type commands only at the moments you deliberately step back. Everything else — feeding lint/type findings back after each edit, keeping the SDD honest, catching drift, protecting work before a rate-limit breach, re-injecting past lessons — runs in hooks while you stay in the implementation loop.
@@ -46,8 +51,11 @@ This adds the marketplace (with `autoUpdate: true`) and `enabledPlugins` to the 
 
 | Command | What it does |
 |---|---|
-| `/takshak:design <req \| KEY>` | Writes an SDD, then the `sdd-adversary` agent attacks it in a fresh context across 10 failure classes. Revise and re-attack, max 3 passes. |
-| `/takshak:breakdown <sdd>` | Refuses unhardened SDDs. ≤ 8 tasks, dependency-ordered, each tied to the risks it mitigates. Creates Claude Code tasks and Jira issues. |
+| `/takshak:design <req \| KEY>` | Nine stages, each with a code-checked exit: a discovery interview recorded in design notes; requirements with IDs and numeric NFRs; every significant decision as an **ADR** with real alternatives; the HLD (incl. threat model and rollback plan); fresh-context adversarial hardening across 10 failure classes; a **freeze**; the LLD; a 24-check **readiness gate**; and a one-file **reviewer pack** (`docs/reviews/<slug>.html`). |
+| `/takshak:start [<request> \| continue]` | The single entry point. Reads the pipeline state from disk, routes a new request into the right lane, and keeps taking the next step that is Claude's (design stages, LLD, breakdown, implementation, reconcile, retro), stopping only for what needs a person: a real decision, the approval, a design change, shipping. |
+| `/takshak:lld [sdd]` | Derives the **low-level design** (exact signatures, algorithms and state tables, ordered schema/migration steps, error mapping, configuration, per-module test mapping) from the *frozen* design only. It decides nothing new; a gap it exposes goes to `/takshak:redesign`. |
+| `/takshak:redesign <what was found>` | When implementation proves the design wrong: source edits pause, the finding becomes a superseding ADR with real options, only the delta is attacked, and **you** approve it before the SDD, tasks and tests change. Quiet patching is replaced by a recorded decision. |
+| `/takshak:breakdown <sdd>` | Refuses a design that fails the readiness gate. ≤ 8 tasks, dependency-ordered, each tied to the risks it mitigates **and the requirement IDs it delivers** (every requirement needs a task, every task a requirement). Creates Claude Code tasks and Jira issues. |
 | *reply* `approved` | A hook sets the approval flag from **your** message. Until then source edits are denied, and Claude cannot approve its own plan. |
 | `sdd-implementer` | Task-by-task implementation. Stays in the bug loop, silently stages SDD amendments, checkpoints continuously. |
 | `/takshak:reconcile [task <id> \| full \| final \| adopt [path]]` | Rebuilds the **Implementation Guide** from the code: verified API contracts, module map, real control flow, data models, divergences from the SDD, and a one-page Gist. Incremental after each task; the Stop hook asks for it when a task completes or `reconcile_edit_threshold` files change. `adopt` reverse-engineers an **existing codebase** with no SDD: it inventories modules, entry points and routes, reads them in batches (parallel subagents for large repos), and writes the guide with every claim cited or marked `inferred` / `unverified`. |
@@ -69,6 +77,7 @@ This adds the marketplace (with `autoUpdate: true`) and `enabledPlugins` to the 
 | `prompt_submit.py` | UserPromptSubmit | stdout context | Captures your "approved"; points code-changing requests at `/takshak:work` when no work item is open; relays an undelivered budget breach |
 | `approval_gate.py` | PreToolUse (Edit/Write/MultiEdit/NotebookEdit/Bash) | `permissionDecision: deny` | Blocks source edits while the plan awaits approval; blocks self-approval; outside an approved plan blocks source edits (including Bash redirects, `tee`, `sed -i`, `cp`/`mv`, `git apply`) until a work item (and, with Jira on, a ticket) is open |
 | `quality_gate.py` | PostToolUse (Edit/Write/MultiEdit) | `additionalContext` | Runs your lint + type commands on the edited file and returns the findings; tracks recurring codes |
+| `fitness_gate.py` | PostToolUse (Edit/Write/MultiEdit) | `additionalContext` | Reports an import that breaks a rule in `.claude/fitness.json` (forbidden imports, layers, file size) at the moment of the edit |
 | `reconcile_tracker.py` | PostToolUse (Edit/Write/MultiEdit) | none (silent bookkeeping) | Remembers which source files changed since the docs were last reconciled |
 | `stop_checklist.py` | Stop | `decision: block` (Claude must act) / `systemMessage` (you should know) | Budget breach, staged amendments, stale checkpoint, docs behind the code; drift, open tasks, uncommitted files, retro offer |
 | `budget_sentinel.py` | statusLine | budget.json → the hooks above | The only surface that sees `rate_limits`; trips at `budget_alert_threshold` |
@@ -82,6 +91,12 @@ Every hook is a no-op in projects without `.claude/framework.json`, so installin
 - **Intent and truth are separate documents.** The SDD records what was designed and is only changed through amendments. The Implementation Guide records what the code does, is rebuilt from the code (`file:line` on every claim, `unverified` when it can't be checked), and lists every divergence from the SDD. Drift is measured by comparing git tree snapshots, so it is deterministic and doesn't depend on whether a change has been committed.
 - **The SDD is a living document.** Design gaps found while fixing bugs are staged as amendments, folded in at the next pause, and compacted after 5. Amendments mark affected tasks `needs_recheck`.
 - **Mitigations are traceable.** Tasks record which risks they mitigate; the `test-auditor` blocks a prod ship when a Critical risk has no test that would fail without its mitigation.
+- **Decisions are recorded, not remembered.** Every significant choice is an ADR with the alternatives actually weighed; `adr.py check` fails a record with one option, a placeholder, or a broken supersession link. Changing a decision means superseding it.
+- **The design is frozen before the LLD, and the freeze is checked.** Editing the design-bearing SDD sections or an accepted ADR afterwards fails the readiness gate until `/takshak:redesign` re-freezes it and the LLD is regenerated.
+- **Requirements are traceable by file, not by hope.** SDD requirement IDs → task `requirements` → `# covers: R1` markers in tests; `trace.py` fails the plan and the ship gate on any gap.
+- **A design flaw is a decision, not a patch.** While a design change is open or unapplied, source edits are denied; only your own "approved" message approves it (the gate also denies Claude writing the approval, including through Bash).
+- **Every change has an owner.** Source edits outside an approved plan need a work item (and a Jira ticket when Jira is on), so ad-hoc requests stop bypassing the pipeline.
+- **The repo keeps its shape.** Documents are recognised by their heading and refused when filed in the wrong place; architecture rules run after every edit, with a baseline ratchet so adopting them on an existing codebase only fails new violations.
 - **Evolution is passive.** Corrections and recurring lint codes become memories that re-enter at design time. Nothing rewrites its own skill files.
 - **One owner for Jira status.** Only `/takshak:ship` transitions tickets, using the status names in `jira_transitions`.
 - **The enforcement claims are checked, not just asserted.** `evals/` runs the plugin against real Claude sessions — the breakdown gate refusing an unhardened SDD, self-approval being denied, quality-gate findings reaching Claude — and scores them, so a change that quietly breaks one of these is caught before it ships.
@@ -107,6 +122,11 @@ Every hook is a no-op in projects without `.claude/framework.json`, so installin
 | `impl_doc_path` | `"docs/implementation"` | Where Implementation Guides live (`<impl_doc_path>/<sdd-slug>.md`) |
 | `reconcile_edit_threshold` | `5` | Changed source files that make the Stop hook ask for a reconcile (a completed task always does) |
 | `reconcile_docs` | `[]` | Extra docs (README, `openapi.yaml`, runbooks) reconcile may check and mechanically fix |
+| `adr_path`, `lld_path`, `notes_path`, `review_path` | `docs/adr`, `docs/lld`, `docs/design-notes`, `docs/reviews` | Canonical locations for decisions, low-level designs, design notes and reviewer packs |
+| `design_readiness_gate` | `true` | `/takshak:breakdown` requires `design.py readiness` to pass; `false` for legacy SDDs without requirement IDs |
+| `structure_gate` / `fitness_gate` | `true` / `true` | Refuse takshak documents filed in the wrong place; report architecture-rule violations after each edit |
+| `layout_extra_dirs` | `[]` | Extra directories under `docs/` that are intentional |
+| `autopilot` | `"suggest"` | `"suggest"` shows the next pipeline step; `"on"` also has the Stop hook nudge Claude onward when the step is Claude's; `"off"` is silent |
 | `memory_path` | `null` | Override the memory directory |
 
 ## Development

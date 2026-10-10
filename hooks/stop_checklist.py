@@ -22,6 +22,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parent))
 
 import _design_change as design_change  # noqa: E402
 import _fitness as fitness  # noqa: E402
+import _flow as flow  # noqa: E402
 import _reconcile as reconcile  # noqa: E402
 import _work as work  # noqa: E402
 from _common import (  # noqa: E402
@@ -134,6 +135,24 @@ def fitness_info(project: Project) -> str | None:
     return f"{len(found)} architecture-rule violation(s) in changed files (first: {found[0]['rule']} in {found[0]['file']}): `tools/structure.py fitness`."
 
 
+def autopilot_item(project: Project) -> str | None:
+    """autopilot: "on" -- when the next step belongs to Claude and needs no human decision, say so,
+    so the pipeline keeps moving without being prompted. Never fires for approval, decisions or ship."""
+    if project.config().get("autopilot") != "on":
+        return None
+    nxt = flow.next_step(project)
+    if nxt["actor"] != "claude" or not nxt.get("skill"):
+        return None
+    return f"Autopilot: the pipeline's next step is yours -- invoke the takshak:{nxt['skill']} skill ({nxt['reason']})."
+
+
+def flow_info(project: Project) -> str | None:
+    if project.config().get("autopilot") == "off":
+        return None
+    nxt = flow.next_step(project)
+    return None if nxt["stage"] == "idle" else flow.line(nxt).replace("[NEXT] ", "Next: ")
+
+
 def design_change_info(project: Project) -> list[str]:
     return [f"Design change {i['id']} is {i['status']} ('{i['title']}'): source edits stay blocked until it is applied (/takshak:redesign)."
             for i in design_change.blocking(project)]
@@ -220,11 +239,13 @@ def main() -> None:
         return
 
     memo = hook_state(project)
-    actions = [i for i in [budget_item(project), *amendment_items(project), checkpoint_item(project), reconcile_item(project)] if i]
+    actions = [i for i in [budget_item(project), *amendment_items(project), checkpoint_item(project), reconcile_item(project), autopilot_item(project)] if i]
     info = info_items(project)
     info.extend(design_change_info(project))
     if fi := fitness_info(project):
         info.append(fi)
+    if nx := flow_info(project):
+        info.append(nx)
     if wi := work_item_info(project):
         info.append(wi)
 

@@ -49,6 +49,7 @@ DEFAULT_CONFIG: dict[str, Any] = {
     "approval_gate": True,
     "work_item_gate": True,
     "adr_path": "docs/adr",
+    "autopilot": "suggest",
     "structure_gate": True,
     "fitness_gate": True,
     "layout_extra_dirs": [],
