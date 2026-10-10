@@ -75,7 +75,7 @@ The hook has recorded the approval and told you to apply. In this order:
 4. Update the task list: TaskUpdate for changed tasks, new tasks for added work (≤ 8 tasks total — more means the feature should be split), `needs_recheck: false` once re-planned, and `"requirements"` on every task. Show the revised dependency tree in a few lines.
 5. `T check --mode plan` must exit 0: every requirement has a task, every task a requirement.
 6. Completed tasks whose code must change get a new task, not a silent edit.
-7. Re-freeze the corrected design and regenerate its LLD: `bash "${CLAUDE_PLUGIN_ROOT}/hooks/run.sh" "${CLAUDE_PLUGIN_ROOT}/tools/design.py" freeze --project "${CLAUDE_PROJECT_DIR:-$PWD}"`, then invoke `takshak:lld` (the old LLD is stale by construction). Skip both only if the project has no frozen design.
+7. Re-freeze the corrected design and regenerate its LLD: `bash "${CLAUDE_PLUGIN_ROOT}/hooks/run.sh" "${CLAUDE_PLUGIN_ROOT}/tools/design.py" freeze --reason "DC-n: <title>" --project "${CLAUDE_PROJECT_DIR:-$PWD}"`, then invoke `takshak:lld` (the old LLD is stale by construction). Skip both only if the project has no frozen design.
 8. Only now: `D apply DC-n`. Source edits are unblocked.
 9. Invoke `takshak:reconcile` once the first corrected task lands so the Implementation Guide's *Divergences* section records the change.
 

@@ -89,9 +89,15 @@ def design_hash(project: Project, sdd_rel: str) -> str:
     return hashlib.sha256("\n".join(parts).encode("utf-8")).hexdigest()[:16]
 
 
-def freeze(project: Project, sdd_rel: str) -> dict[str, Any]:
+def freeze(project: Project, sdd_rel: str, reason: str = "") -> dict[str, Any]:
+    """Lock the design. Re-freezing a design that changed since the last freeze is allowed but is
+    always on the record: who changed a frozen design, and why, must be visible to a reviewer."""
+    prior = read_json(project.root / freeze_rel(sdd_rel))
     record = {"sdd": sdd_rel, "hash": design_hash(project, sdd_rel), "frozen_at": now_iso(),
-              "adrs": [a["number"] for a in adr.load_all(project) if adr.is_live(a)]}
+              "adrs": [a["number"] for a in adr.load_all(project) if adr.is_live(a)],
+              "refreezes": list(prior.get("refreezes") or [])}
+    if prior.get("hash") and prior["hash"] != record["hash"]:
+        record["refreezes"].append({"at": record["frozen_at"], "from": prior["hash"], "to": record["hash"], "reason": reason})
     write_json(project.root / freeze_rel(sdd_rel), record)
     return record
 

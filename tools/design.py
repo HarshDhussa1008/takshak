@@ -25,7 +25,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parent.parent / "hooks"))
 import _adr as adr  # noqa: E402
 import _design as design  # noqa: E402
 import _trace as trace  # noqa: E402
-from _common import Project  # noqa: E402
+from _common import Project, read_json  # noqa: E402
 
 TEMPLATES = Path(__file__).resolve().parent.parent / "templates"
 
@@ -113,7 +113,12 @@ def cmd_freeze(args: argparse.Namespace) -> int:
     if problems:
         print("cannot freeze yet: " + "; ".join(problems), file=sys.stderr)
         return 1
-    rec = design.freeze(project, sdd)
+    state = design.freeze_state(project, sdd)
+    if state["frozen"] and not state["intact"] and not (args.reason or "").strip():
+        print("the design changed after it was frozen: re-freezing needs --reason (e.g. the design change id, DC-1) so the change is on the record; "
+              "a substantive change goes through /takshak:redesign", file=sys.stderr)
+        return 1
+    rec = design.freeze(project, sdd, args.reason or "")
     print(f"frozen {sdd} at {rec['hash']} ({len(rec['adrs'])} accepted ADR(s)); derive the LLD with /takshak:lld")
     return 0
 
@@ -246,6 +251,10 @@ def build_pack(project: Project, sdd: str) -> str:
     ask = decide + oq
     ask_html = ("<ul>" + "".join(f"<li>{esc(x)}</li>" for x in ask) + "</ul>") if ask else '<p class="ok">Nothing is waiting on a decision.</p>'
     trace_html = md_to_html(trace.render_markdown(report))
+    refreezes = read_json(project.root / design.freeze_rel(sdd)).get("refreezes") or []
+    refreeze_html = ("<h2>Changes after the freeze</h2><table><thead><tr><th>When</th><th>Reason</th></tr></thead><tbody>"
+                     + "".join(f"<tr><td>{esc(str(r.get('at', '')))}</td><td>{esc(str(r.get('reason') or '(none given)'))}</td></tr>" for r in refreezes)
+                     + "</tbody></table>") if refreezes else ""
     return f"""<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Design review: {esc(title)}</title><style>{PACK_CSS}</style></head><body><main>
 <p class="mut">Design review pack &middot; generated from <code>{esc(sdd)}</code> &middot; the document is the source of truth, this page is a view of it</p>
@@ -256,7 +265,7 @@ def build_pack(project: Project, sdd: str) -> str:
 <h2>Requirement coverage</h2>{trace_html}
 <h2>Decisions</h2>{"".join(adr_cards) or '<p class="mut">No ADRs recorded.</p>'}
 {sec("Architecture")}{sec("Key Flows")}{sec("Module Map")}{sec("API Contracts")}{sec("Data Models")}
-{sec("Security", "Security and threat model")}{sec("Rollout and Rollback")}{sec("Observability")}{sec("Risk Register")}
+{refreeze_html}{sec("Security", "Security and threat model")}{sec("Rollout and Rollback")}{sec("Observability")}{sec("Risk Register")}
 <h2>Readiness checklist</h2><table><thead><tr><th>Result</th><th>Check</th><th>Detail</th></tr></thead><tbody>{checklist}</tbody></table>
 </main>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/mermaid/10.9.2/mermaid.min.js"></script>
@@ -289,6 +298,8 @@ def main() -> None:
             p.add_argument("--sdd")
         if name in ("status", "readiness"):
             p.add_argument("--json", action="store_true")
+        if name == "freeze":
+            p.add_argument("--reason", help="required when re-freezing a design that changed after its last freeze")
     args = parser.parse_args()
     sys.exit(args.func(args))
 

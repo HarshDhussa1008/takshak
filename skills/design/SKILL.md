@@ -81,7 +81,7 @@ Resolve every open question (`- [x] … — resolved: …`; ask the user for any
 ```bash
 DS freeze
 ```
-It refuses while requirement IDs, an accepted ADR, hardening or open-question resolution are missing — fix what it names. From here the design-bearing sections and accepted decisions are locked: editing them silently makes the readiness check fail ("changed after the freeze"). A real change goes through `/takshak:redesign`, which re-freezes deliberately.
+It refuses while requirement IDs, an accepted ADR, hardening or open-question resolution are missing — fix what it names. From here the design-bearing sections and accepted decisions are locked: editing them silently makes the readiness check fail ("changed after the freeze"). A real change goes through `/takshak:redesign`, which re-freezes deliberately. Re-freezing a design that changed needs `DS freeze --reason "<why>"` and is listed in the reviewer pack under "Changes after the freeze" — fix a wording slip that way if you must, never a substantive change.
 
 ## Stage 7 — Low-level design
 Invoke the `takshak:lld` skill. The LLD is derived from the frozen design and decides nothing new.

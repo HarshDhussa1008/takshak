@@ -291,7 +291,9 @@ def test_editing_the_design_after_the_freeze_is_detected(ready: Proj) -> None:
     f = failing(ready)
     assert "Design frozen" in f and "changed after the freeze" in checks(ready)["Design frozen"]["detail"]
     assert json.loads(tool(ready, "status", "--json").stdout)["stage"] == "design-changed-after-freeze"
-    tool(ready, "freeze")  # a deliberate re-freeze (what /takshak:redesign does) ...
+    r = tool(ready, "freeze", check=False)
+    assert r.returncode == 1 and "--reason" in r.stderr  # a silent re-freeze is refused
+    tool(ready, "freeze", "--reason", "DC-1: fail closed")  # a deliberate, recorded re-freeze (what /takshak:redesign does) ...
     assert "LLD derived from the frozen design" in failing(ready)  # ... makes the old LLD stale until regenerated
     tool(ready, "stamp-lld")
     assert failing(ready) == set()
@@ -342,3 +344,16 @@ def test_review_pack_surfaces_what_needs_a_human_and_escapes_content(design_proj
     assert "ADR-0001 Redis for counters" in page.split("Decisions needed from you")[1].split("</div>")[0]
     assert "<script>alert(1)</script>" not in page
     assert "Readiness " in page and "not frozen" in page
+
+
+def test_refreezes_are_recorded_and_shown_to_reviewers(ready: Proj) -> None:
+    path = ready.root / SDD_REL
+    path.write_text(path.read_text().replace("fail open by default", "fail closed by default"))
+    tool(ready, "freeze", "--reason", "DC-1: fail closed")
+    record = json.loads((ready.root / "docs/sdd/rate-limiter.freeze.json").read_text())
+    assert [r["reason"] for r in record["refreezes"]] == ["DC-1: fail closed"]
+    tool(ready, "stamp-lld")
+    page = (ready.root / tool(ready, "pack").stdout.strip()).read_text()
+    assert "Changes after the freeze" in page and "DC-1: fail closed" in page
+    assert tool(ready, "freeze").returncode == 0  # re-freezing an unchanged design needs no reason and adds no entry
+    assert len(json.loads((ready.root / "docs/sdd/rate-limiter.freeze.json").read_text())["refreezes"]) == 1
