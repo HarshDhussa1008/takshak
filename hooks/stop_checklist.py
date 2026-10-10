@@ -20,6 +20,8 @@ from typing import Any
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 
+import _reconcile as reconcile  # noqa: E402
+import _work as work  # noqa: E402
 from _common import (  # noqa: E402
     Project,
     age_seconds,
@@ -94,6 +96,41 @@ def checkpoint_item(project: Project) -> str | None:
     return None
 
 
+def reconcile_item(project: Project) -> str | None:
+    """Ask for /takshak:reconcile at a "major edit completion": a task just finished, or
+    `reconcile_edit_threshold` source files moved since the docs were last brought in line.
+    Only once implementation is actually under way -- design-time edits are not drift."""
+    if not reconcile.enabled(project):
+        return None
+    state = read_json(project.task_state)
+    if state.get("approved") is not True:
+        return None
+    info = reconcile.status(project)
+    if not info["due"]:
+        return None
+    reason = (
+        f"task(s) {', '.join(info['completed_unreconciled'])} completed"
+        if info["completed_unreconciled"] else f"{len(info['changed'])} source file(s) changed"
+    )
+    mode = "create" if info["needs"] == "init" else "update"
+    return (
+        f"Docs are behind the code ({reason}): invoke the takshak:reconcile skill now to {mode} "
+        f"{info['impl_doc']} from the actual code (API contracts, flow, module map, divergences from the SDD)."
+    )
+
+
+def work_item_info(project: Project) -> str | None:
+    """Informational (never blocks): an open work item whose edits have landed should be closed
+    or carried forward, so the ledger does not fill with zombies."""
+    if not work.gate_enabled(project):
+        return None
+    item = work.active_item(project)
+    if item is None:
+        return None
+    ref = f"{item['id']}" + (f" [{item['jira_key']}]" if item.get("jira_key") else "")
+    return f"Work item {ref} still open ('{item['title']}'): if it is finished, `tools/work.py done`; /takshak:ship transitions its ticket."
+
+
 def task_refs(task: dict[str, Any]) -> list[re.Pattern[str]]:
     refs = []
     if jira := task.get("jira_key"):
@@ -163,8 +200,10 @@ def main() -> None:
         return
 
     memo = hook_state(project)
-    actions = [i for i in [budget_item(project), *amendment_items(project), checkpoint_item(project)] if i]
+    actions = [i for i in [budget_item(project), *amendment_items(project), checkpoint_item(project), reconcile_item(project)] if i]
     info = info_items(project)
+    if wi := work_item_info(project):
+        info.append(wi)
 
     action_hash = digest(actions) if actions else ""
     can_block = bool(actions) and not payload.get("stop_hook_active") and memo.get("last_block") != action_hash

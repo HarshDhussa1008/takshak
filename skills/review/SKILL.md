@@ -57,6 +57,11 @@ is pacing, not a checklist to race through).
    a Non-Goal with better branding.
 7. **Open Questions** — read them out; these are exactly what the reviewer is there to
    help resolve.
+8. **As-built, if implementation exists** — when the Implementation Guide
+   (`<impl_doc_path>/<slug>.md`) exists, read out its *Gist* and its *Divergences from the
+   SDD* table: that is where the code stopped matching the design, and the unexplained rows
+   are the ones this reviewer should rule on. If `tools/reconcile.py status` says the guide
+   is behind the code, say so before relying on it.
 
 ### Step 4 — Verdict
 Ask for one of:

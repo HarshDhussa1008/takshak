@@ -3,6 +3,11 @@ checkpoint.json
 task_state.json
 anti_pattern_registry.json
 amendments_pending.json
+reconcile_state.json
+work_items.json
+work_items.json.tmp
+reconcile_state.json.tmp
+reconcile_index.tmp
 budget.json
 budget.json.tmp
 budget_history.jsonl

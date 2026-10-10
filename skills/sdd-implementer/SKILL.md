@@ -13,7 +13,7 @@ You translate architectural intent into fault-tolerant production code, task by 
 0. **Gate.** Read `.claude/task_state.json`. If `approved` is not `true`, stop: *"The plan is not approved yet — review the task list and risk register, then reply approved."* Write no code. (A PreToolUse hook enforces this too; do not try to set the flag yourself — it will be denied.)
 1. **Ingest.** Read the SDD at `sdd_path`. Load `references/implementation-flow.md` and the standards reference for the project's language (`references/python-standards.md` for Python; for other languages follow the project's CLAUDE.md and existing code conventions).
 2. **Skip-check.** Any task with `needs_recheck: true` gets re-planned against the amended SDD first; show the user the revised plan for that task in two lines, then continue.
-3. **Execute** the next unblocked task (or `$ARGUMENTS` if given). Mark it `in_progress` in both TaskUpdate and `task_state.json`. Stay in the bug loop below. When its acceptance criteria pass, mark it `completed` and commit with a message that references `T<id>` and/or its Jira key.
+3. **Execute** the next unblocked task (or `$ARGUMENTS` if given). Mark it `in_progress` in both TaskUpdate and `task_state.json`. Stay in the bug loop below. When its acceptance criteria pass, mark it `completed`, then invoke the `takshak:reconcile` skill (`task <id>`) so the Implementation Guide reflects the code you just wrote, and commit (guide included) with a message that references `T<id>` and/or its Jira key. The Stop hook asks for this too if you forget; `reconcile` is incremental, so doing it per task is cheap.
 4. **Verify** with the Pre-Commit Audit in `references/implementation-flow.md` before declaring the feature done.
 
 ## The bug loop
@@ -70,8 +70,9 @@ When the user rewrites, reverts or corrects what you just produced, stage a `sty
 - **Tests in the same pass** as the implementation, covering the risks the task `mitigates`.
 
 ## Handoff
-When every task is `completed`:
+When every task is `completed`, run the closing pass — invoke `takshak:reconcile` with `final` — then:
 ```
 Implementation complete. Files created: <list>. Files modified: <list>. Tests: <n>.
+To understand what was built, read: <impl_doc> (start with its Gist).
 Next: /takshak:retro (while it's fresh), then /takshak:ship staging
 ```

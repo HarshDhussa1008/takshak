@@ -1,7 +1,14 @@
-"""PreToolUse hook (Edit|Write|MultiEdit|NotebookEdit) -- the design->code checkpoint, enforced.
+"""PreToolUse hook (Edit|Write|MultiEdit|NotebookEdit|Bash) -- the design->code checkpoint, enforced.
 
-While a breakdown is awaiting approval, source edits are denied. Planning artifacts stay
-writable: anything under .claude/, the SDD directory, and Markdown files.
+Two checkpoints, both for source edits (planning artifacts stay writable: anything under
+.claude/, the SDD directory, and Markdown files):
+
+1. While a breakdown is awaiting approval, source edits are denied.
+2. Outside an approved plan, a source edit needs an open *work item* (and, with Jira on, a
+   ticket linked or deferred on it). That is what stops ad-hoc requests from bypassing the
+   pipeline and leaving task state and the repo in a mess. `/takshak:work` opens one.
+
+Bash is covered too, for the clear write patterns (redirects, tee, sed -i, cp/mv, git apply).
 
 Claude may not approve its own plan: an edit to task_state.json that flips `approved`
 from false to true is denied. Only the user's own "approved" message does that, via
@@ -18,6 +25,7 @@ from typing import Any
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 
+import _work as work  # noqa: E402
 from _common import Project, emit, project_root, read_json, read_payload, run_safely  # noqa: E402
 
 APPROVED_TRUE = re.compile(r'"approved"\s*:\s*true')
@@ -80,39 +88,101 @@ def is_planning_artifact(project: Project, path: Path, sdd_dir: str) -> bool:
     return path.suffix.lower() in {".md", ".mdx"}
 
 
+def bash_target(project: Project, command: str) -> tuple[Path | None, str | None]:
+    """First project-relative file a Bash command writes -> (path, None); a patch whose files
+    cannot be known -> (project root, '<patch>'); nothing relevant -> (None, None)."""
+    for raw in work.bash_write_targets(command):
+        if raw == "<patch>":
+            return project.root.resolve(), raw
+        path = Path(raw).expanduser()
+        if not path.is_absolute():
+            path = project.root / path
+        try:
+            resolved = path.resolve()
+            resolved.relative_to(project.root.resolve())
+        except (ValueError, OSError):
+            continue  # outside the project (/tmp, ~): not ours to gate
+        return resolved, raw
+    return None, None
+
+
+def work_item_block(project: Project) -> str | None:
+    if not work.gate_enabled(project) or work.plan_covers_edits(project):
+        return None
+    item = work.active_item(project)
+    if item is None:
+        return (
+            "No work item is open, so this source change is not attributed to anything. Run "
+            "/takshak:work first: it sizes the request, opens a work item"
+            + (" and a Jira ticket of the right type" if work.jira_on(project) else "")
+            + ", and then editing is unblocked. (Bug reports, small tweaks and features all go through it; "
+            "turn the check off with work_item_gate: false in .claude/framework.json.)"
+        )
+    if work.ticket_state(project, item) == "missing":
+        return (
+            f"Work item {item['id']} ('{item['title']}') has no Jira ticket. Link one "
+            f"(`tools/work.py link {item['id']} <KEY>`) or, if Jira is unreachable, defer it "
+            f"(`tools/work.py defer {item['id']} --reason ...`) -- /takshak:work does either."
+        )
+    return None
+
+
 def main() -> None:
     payload = read_payload()
     project = Project(project_root(payload))
     if not project.enabled:
         return
     config = project.config()
-    if config.get("approval_gate") is False:
+    if config.get("approval_gate") is False and not work.gate_enabled(project):
         return
 
     tool_name = str(payload.get("tool_name", ""))
     tool_input = payload.get("tool_input") or {}
-    path = target_path(project, tool_input)
-    if path is None:
-        return
+    if tool_name == "Bash":
+        command = str(tool_input.get("command", ""))
+        path, raw = bash_target(project, command)
+        if path is None:
+            return
+        if path == project.task_state.resolve() and APPROVED_TRUE.search(command) \
+                and read_json(project.task_state).get("approved") is not True:
+            deny("Only the user can approve the plan. Ask them to reply 'approved'; a hook sets the flag.")
+            return
+    else:
+        path = target_path(project, tool_input)
+        if path is None:
+            return
+        if path == project.task_state.resolve() and is_self_approval(project, tool_name, tool_input):
+            deny(
+                "Only the user can approve the plan. Stop and ask them to review the task list and "
+                "reply 'approved'; a hook sets the flag from their message."
+            )
+            return
 
-    if path == project.task_state.resolve() and is_self_approval(project, tool_name, tool_input):
-        deny(
-            "Only the user can approve the plan. Stop and ask them to review the task list and "
-            "reply 'approved'; a hook sets the flag from their message."
-        )
+    sdd_dir = str(config.get("sdd_path") or "docs/sdd")
+    if raw_is_patch(path, project, tool_name, tool_input):
+        planning = False
+    else:
+        planning = is_planning_artifact(project, path, sdd_dir)
+    if planning:
         return
 
     state = read_json(project.task_state)
-    if not state.get("tasks") or state.get("approved") is True:
+    awaiting = bool(state.get("tasks")) and state.get("approved") is not True
+    if awaiting and config.get("approval_gate") is not False:
+        deny(
+            f"Plan awaiting approval: {len(state['tasks'])} task(s) from {state.get('sdd_path') or 'the SDD'} "
+            "have not been approved, so source edits are blocked. Show the user the task list and ask "
+            "them to reply 'approved'. (To work outside this plan, the user can run "
+            "/takshak:checkpoint clear-plan, or set approval_gate: false in .claude/framework.json.)"
+        )
         return
-    if is_planning_artifact(project, path, str(config.get("sdd_path") or "docs/sdd")):
-        return
-    deny(
-        f"Plan awaiting approval: {len(state['tasks'])} task(s) from {state.get('sdd_path') or 'the SDD'} "
-        "have not been approved, so source edits are blocked. Show the user the task list and ask "
-        "them to reply 'approved'. (To work outside this plan, the user can run "
-        "/takshak:checkpoint clear-plan, or set approval_gate: false in .claude/framework.json.)"
-    )
+    if reason := work_item_block(project):
+        deny(reason)
+
+
+def raw_is_patch(path: Path, project: Project, tool_name: str, tool_input: dict[str, Any]) -> bool:
+    """A `git apply`/`patch` Bash command has no knowable target: treat it as a source write."""
+    return tool_name == "Bash" and path == project.root.resolve()
 
 
 if __name__ == "__main__":

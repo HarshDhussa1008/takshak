@@ -19,7 +19,7 @@ You facilitate a retrospective as soon as implementation finishes — before /ta
 - `.claude/task_state.json` — the plan, Jira keys
 - If Jira is on: search `issue in (<jira keys>)` (`searchJiraIssuesUsingJql` / `jira_search`) for `key`, `status`, `resolution`
 
-Diff plan vs. commits: unimplemented tasks, unplanned commits, amendments count from the SDD.
+Diff plan vs. commits: unimplemented tasks, unplanned commits, amendments count from the SDD. If the Implementation Guide exists, add its *Divergences from the SDD* count — each one is a design gap worth a question below.
 
 Open with a 3-line summary of that diff — it is the evidence the questions are about.
 

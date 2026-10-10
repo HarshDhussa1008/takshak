@@ -28,6 +28,7 @@ Confirm: "Shipping **<project_name>** to **<env>**. Proceed? (yes/no)"
 - `.claude/amendments_pending.json` has no unflushed `candidates`.
 - No task has `needs_recheck: true`.
 - No `Critical` risk is unmitigated.
+- The Implementation Guide is in sync with the code: `bash "${CLAUDE_PLUGIN_ROOT}/hooks/run.sh" "${CLAUDE_PLUGIN_ROOT}/tools/reconcile.py" check --project "${CLAUDE_PROJECT_DIR:-$PWD}"` exits 0 (skip when `reconcile` is `false`). Exit 1 means the docs are behind the code — run `/takshak:reconcile final` first.
 
 FAIL on prod → hard stop. FAIL on staging → warn with the list, continue.
 
@@ -59,7 +60,7 @@ Checkpoint phase 4.
 ### Step 5 — Post-deploy sync
 
 **a) Jira (only if `jira_integration`):** target status = `jira_transitions[<env>]`. If the env has no entry, comment only.
-For each task with a `jira_key`, and for `parent_jira_key`: use the Jira MCP (`getTransitionsForJiraIssue` + `transitionJiraIssue`, or `jira_get_transitions` + `jira_transition_issue`) to find the transition whose target status name matches, and apply it. No match → log `[JIRA] no transition to "<status>" for <key>` and continue.
+For each task with a `jira_key`, each *closed work item* in `.claude/work_items.json` with a `jira_key` (ad-hoc changes opened by `/takshak:work`), and for `parent_jira_key`: use the Jira MCP (`getTransitionsForJiraIssue` + `transitionJiraIssue`, or `jira_get_transitions` + `jira_transition_issue`) to find the transition whose target status name matches, and apply it. No match → log `[JIRA] no transition to "<status>" for <key>` and continue.
 Comment on the parent:
 ```
 🚀 Deployed to <env> by Claude Code (takshak)

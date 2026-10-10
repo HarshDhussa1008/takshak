@@ -47,11 +47,27 @@ Bulleted list. Explicit scope boundaries.
 ## Architecture
 A mermaid diagram (```mermaid) of components and data flow.
 
+## Module Map
+The planned code layout, so the as-built guide has a skeleton to be diffed against.
+| Module / path | Responsibility | Depends on | Public surface |
+|---------------|----------------|------------|----------------|
+
+## Key Flows
+One mermaid `sequenceDiagram` per primary flow (the happy path of each Goal) and one for the
+main failure path. Participants are the modules in the Module Map, so a reader can walk the
+flow module by module before any code exists.
+
 ## Data Models
-Key entities with field names and types.
+Key entities with field names, types, constraints and indexes.
 
 ## API Contracts
-Endpoint signatures: METHOD /path → request body → response body.
+Every interface other code or other teams will call (HTTP endpoints, events, CLI, public functions).
+One entry each, complete enough to implement and to test against:
+- `METHOD /path` (or the interface name) and its purpose
+- auth required, idempotency behaviour, versioning
+- request: each field as `name: type` + required/optional + validation rules
+- success response: status + body, field by field
+- every error response: status → body shape → when it occurs
 
 ## Detailed Design
 Only for the 1–2 highest-risk modules (pick them deliberately and say why).
@@ -82,7 +98,9 @@ reveals a design gap. See the compaction rule in that skill.)
 Unresolved decisions that need input. Empty if none.
 ```
 
-**Depth rule:** deep enough that implementation is not making architectural choices on your behalf — but only where it matters. Go to signature level for the 1–2 riskiest modules. Uniform depth is either wasted design time or false autonomy.
+**Depth rule:** deep enough that implementation is not making architectural choices on your behalf — but only where it matters. Go to signature level for the 1–2 riskiest modules; *interfaces* (API Contracts, Data Models, Module Map, Key Flows) are specified for the whole feature because they are what other code and other people depend on. Uniform depth inside module internals is either wasted design time or false autonomy.
+
+**Intent vs. as-built:** the SDD is the record of what was *intended* before code existed — it cannot describe a codebase that is not written yet, and it must not be rewritten to look like one. The low-level truth (real file:line flow, verified contracts, divergences from this design, a one-page Gist) lives in the Implementation Guide that `/takshak:reconcile` builds from the code as tasks complete.
 
 ### Step 4 — Adversarial hardening (design → attack → redesign → repeat)
 
@@ -151,8 +169,9 @@ Update `last_memory_write` in `.claude/task_state.json` (ISO-8601 UTC).
 
 ## Quality Bar
 - Non-Goals non-empty
-- Architecture diagram shows at least 2 components
-- API Contracts include at least one error response shape
+- Architecture diagram shows at least 2 components; Module Map names every module the Key Flows mention
+- Key Flows has a happy path per Goal and at least one failure path
+- API Contracts specify every field's type and every error response (status → body → when)
 - Detailed Design covers at least one module at signature level
 - Risk Register has a verdict for all 10 classes; no `Critical` unmitigated
 - Test Plan has one row per Goal

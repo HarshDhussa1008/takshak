@@ -47,8 +47,13 @@ DEFAULT_CONFIG: dict[str, Any] = {
     "project_typecheck_command": "python -m mypy . --ignore-missing-imports",
     "gate_extensions": [".py"],
     "approval_gate": True,
+    "work_item_gate": True,
     "budget_alert_threshold": 95,
     "sdd_path": "docs/sdd",
+    "reconcile": True,
+    "reconcile_edit_threshold": 5,
+    "impl_doc_path": "docs/implementation",
+    "reconcile_docs": [],
     "memory_path": None,
     "languages": ["python"],
 }
