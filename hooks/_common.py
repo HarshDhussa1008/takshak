@@ -180,6 +180,12 @@ def claude_slug(path: Path) -> str:
     return re.sub(r"[^A-Za-z0-9]", "-", str(path))
 
 
+def claude_home() -> Path:
+    """Claude Code's config directory: $CLAUDE_CONFIG_DIR when set, else ~/.claude."""
+    env = os.environ.get("CLAUDE_CONFIG_DIR")
+    return Path(os.path.expanduser(env)) if env else Path.home() / ".claude"
+
+
 def memory_dir(project: Project, payload: dict[str, Any]) -> Path:
     override = project.config().get("memory_path")
     if override:
@@ -189,7 +195,7 @@ def memory_dir(project: Project, payload: dict[str, Any]) -> Path:
         # The transcript lives in the exact project folder Claude Code uses, so its parent
         # is authoritative -- no need to re-derive the slug and risk getting it wrong.
         return Path(transcript).parent / "memory"
-    return Path.home() / ".claude" / "projects" / claude_slug(project.root) / "memory"
+    return claude_home() / "projects" / claude_slug(project.root) / "memory"
 
 
 def emit(payload: dict[str, Any]) -> None:
