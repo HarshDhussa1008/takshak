@@ -310,8 +310,8 @@ def resolve_type(level: str, profile: dict[str, Any] | None, *, is_bug: bool = F
 
 
 _SYNONYMS = {
-    "epic": ("epic",),
-    "story": ("story", "user story"),
+    "epic": ("epic", "initiative", "theme", "program", "programme"),
+    "story": ("story", "user story", "feature", "enhancement", "improvement", "new feature"),
     "task": ("task", "work item", "work"),
     "bug": ("bug", "defect", "incident"),
     "subtask": ("sub-task", "subtask", "sub task", "sub-work item"),

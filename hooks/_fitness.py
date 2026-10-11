@@ -236,6 +236,12 @@ def check(project: Project, only: set[str] | None = None, include_baseline: bool
 
     for rule in cfg["rules"]:
         rtype = rule.get("type") or ("import" if rule.get("forbid") else "")
+        if rtype not in {"import", "layers", "max-lines", "no-cycles"} or (rtype == "import" and not rule.get("forbid")):
+            # a rule that silently checks nothing is worse than no rule
+            found.append({"rule": str(rule.get("id") or "?"), "file": ".claude/fitness.json",
+                          "detail": "invalid rule (needs `from`+`forbid`, or type layers / no-cycles / max-lines); it is not being enforced",
+                          "key": key(str(rule.get("id") or "?"), ".claude/fitness.json", "invalid"), "description": ""})
+            continue
         scope = str(rule.get("from") or rule.get("scope") or "")
         files = [f for f in source_files(project, scope) if only is None or f in only]
         if rtype == "import":

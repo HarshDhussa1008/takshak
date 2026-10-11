@@ -374,3 +374,12 @@ def test_docs_tree_and_config_are_never_source(project) -> None:  # type: ignore
                              ({"command": "mkdir -p docs/adr && touch docs/adr/.gitkeep"}, "Bash")):
         out = project.hook_json("approval_gate", {"hook_event_name": "PreToolUse", "tool_name": tool, "tool_input": tool_input})
         assert out.get("hookSpecificOutput", {}).get("permissionDecision") != "deny", (tool, tool_input)
+
+
+def test_mapping_guess_understands_renamed_types() -> None:
+    sys.path.insert(0, str(ROOT / "hooks"))
+    import _work
+
+    types = [{"name": n} for n in ("Initiative", "Feature", "Work Item", "Defect", "Sub-task")]
+    guess = _work.guess_mapping(types)
+    assert guess == {"epic": "Initiative", "story": "Feature", "task": "Work Item", "bug": "Defect", "subtask": "Sub-task"}

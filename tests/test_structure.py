@@ -213,3 +213,10 @@ def test_stop_hook_reports_violations_in_changed_files(app: Proj) -> None:
     out = app.hook_json("stop_checklist", {"hook_event_name": "Stop"})
     assert "architecture-rule violation" in out.get("systemMessage", "")
     assert Project(app.root).enabled
+
+
+def test_malformed_rule_is_reported_not_ignored(project: Proj) -> None:
+    project.write("app.py", "import requests\n")
+    rules(project, {"id": "typo", "type": "forbidden-import", "scope": "app.py", "forbidden": ["requests"]})
+    r = tool(project, "fitness", check=False)
+    assert r.returncode == 1 and "invalid rule" in r.stdout
