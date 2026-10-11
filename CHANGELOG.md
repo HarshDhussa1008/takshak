@@ -2,6 +2,13 @@
 
 ## Unreleased
 
+### Fixed (found by validating on a scratch repo and an existing repo)
+- `init` no longer leaves the work-item gate blocking its own follow-up edits: `docs/` and `.claude/` are never treated as source. `init` no longer pastes free text into the shell, and the doctor flags only the real default `build_command` placeholder, so an explicit no-op passes.
+- Bash self-approval hole closed: a Python one-liner could set `approved = True` in the task state. Command splitting is now quote-aware, `open(var, 'w')` is treated as a write to any file named in the command, and "approved" set to a true value is refused in any syntax.
+- Malformed fitness rules (wrong keys, unknown type) are reported as `invalid rule` instead of silently checking nothing.
+- Renamed Jira types map sensibly (Initiative to epic, Feature to story).
+- The flow stops at a `tracing` step when a requirement has no `# covers:` test, instead of advancing to retro and finding out at ship time.
+
 ### Added
 - **Newcomer walkthrough, inside `/takshak:reconcile`** (`adopt` and `full`): `docs/onboarding/<name>.md` with a system flowchart, glossary, reading order, one run followed end to end (sequence diagram + failure path), data and state, module-by-module tour, config, run/debug, sharp edges, change recipes and exercises. `tools/onboard.py check` fails on missing sections or diagrams, leftover placeholders and any `file:line` citation that does not exist. `ARCHITECTURE.md` now scaffolds with a system-context diagram. New config key `onboarding_path`.
 - `/takshak:start` + `hooks/_flow.py` + `tools/flow.py` — the pipeline as a state machine. The next step and who must move (claude / user) are derived from files on disk, shown at session start and on Stop, and followed by one skill; `autopilot: "on"` nudges Claude onward between steps. Human gates (decisions, approval, design change, shipping) are never skipped.
