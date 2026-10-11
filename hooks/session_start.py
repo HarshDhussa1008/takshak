@@ -21,6 +21,10 @@ from typing import Any
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 
+import _design_change as design_change  # noqa: E402
+import _flow as flow  # noqa: E402
+import _reconcile as reconcile  # noqa: E402
+import _work as work  # noqa: E402
 from _common import (  # noqa: E402
     DEFAULT_CONFIG,
     Project,
@@ -200,6 +204,62 @@ def checkpoint_lines(project: Project) -> list[str]:
     return lines
 
 
+def guide_lines(project: Project) -> list[str]:
+    """Where to start reading: the as-built Implementation Guide, if one exists."""
+    if not reconcile.enabled(project):
+        return []
+    info = reconcile.status(project)
+    if not info["impl_doc_exists"]:
+        return []
+    lines = [f"[GUIDE] {info['impl_doc']} -- read its Gist first to understand what was built and where to start."]
+    if info["needs"] != "none":
+        lines.append(
+            f"  Out of date: {len(info['changed'])} source file(s) changed since the last /takshak:reconcile."
+        )
+    return lines
+
+
+def work_lines(project: Project) -> list[str]:
+    """Standing operating rule + where the current work item and Jira setup stand."""
+    if not work.gate_enabled(project):
+        return []
+    lines = ["[WORK] Every code change belongs to a work item: for any request that changes code (bug, tweak, "
+             "feature), invoke the takshak:work skill first. Source edits are blocked without one."]
+    if item := work.active_item(project):
+        lines.append(f"  Active: {item['id']} ({item['lane']}) {item['title']}"
+                     + (f" [{item['jira_key']}]" if item.get("jira_key") else ""))
+    if work.jira_on(project):
+        owed = [i for i in work.load(project)["items"] if i.get("jira_deferred") and not i.get("jira_key")]
+        if owed:
+            lines.append(f"  {len(owed)} work item(s) are waiting for a Jira ticket ({', '.join(i['id'] for i in owed[:6])}): "
+                         "if the Jira tools are available now, offer to create them via /takshak:work ticket.")
+        mode = work.profile_mode(project)
+        lines.append({
+            "none": "  Jira: enabled but this project's issue types have not been discovered yet -- the first ticket will "
+                    "walk the user through confirming project and types.",
+            "unconfirmed": "  Jira: issue types discovered but not yet confirmed by the user.",
+            "confirm": "  Jira: project confirmed; each new ticket is proposed to the user before it is created.",
+            "auto": "  Jira: project confirmed, auto-mode on; tickets are created from the remembered profile.",
+        }[mode])
+    return lines
+
+
+def convention_lines(project: Project) -> list[str]:
+    found = [n for n in ("ARCHITECTURE.md", "CONVENTIONS.md") if (project.root / n).is_file()]
+    if not found:
+        return []
+    return [f"[CONVENTIONS] Read {' and '.join(found)} before changing code: they define the layout, layering and style "
+            "this repo enforces (boundaries are checked from .claude/fitness.json after every edit)."]
+
+
+def design_change_lines(project: Project) -> list[str]:
+    lines = []
+    for item in design_change.blocking(project):
+        lines.append(f"[DESIGN CHANGE] {item['id']} ({item['status']}): {item['title']} -- source edits are blocked until it is applied; "
+                     "continue with /takshak:redesign." + (" Waiting for the user's 'approved'." if item["status"] == "proposed" else ""))
+    return lines
+
+
 def plan_lines(project: Project) -> list[str]:
     state = read_json(project.task_state)
     tasks = state.get("tasks") or []
@@ -244,7 +304,14 @@ def main() -> None:
     for title, snippet in relevant_memories(memory_dir(project, payload), context_keywords(project, config, branch)):
         out.append(f"[MEMORY] {title}: {snippet}")
 
+    nxt = flow.next_step(project)
+    if nxt["stage"] != "idle":
+        out.append(flow.line(nxt))
+    out.extend(convention_lines(project))
+    out.extend(design_change_lines(project))
+    out.extend(work_lines(project))
     out.extend(plan_lines(project))
+    out.extend(guide_lines(project))
     out.extend(checkpoint_lines(project))
 
     if out:

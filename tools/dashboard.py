@@ -27,7 +27,12 @@ from datetime import datetime, timezone
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
 
-from metrics import summarize  # tools/metrics.py, same directory -- Python puts a script's own dir on sys.path[0]
+# order matters: importing metrics is what puts hooks/ on sys.path
+from metrics import summarize  # isort: skip  (tools/metrics.py: same directory; puts hooks/ on sys.path)
+
+# metrics.py put hooks/ on sys.path, which is where the shared drift bookkeeping lives
+import _reconcile as reconcile  # noqa: E402  # isort: skip
+from _common import Project  # noqa: E402  # isort: skip
 
 
 def resolve_project_root(argv: list[str]) -> Path:
@@ -358,6 +363,22 @@ def render_pipeline(checkpoint: dict, state: dict) -> str:
     return f'<div class="stages">{"".join(steps)}</div>'
 
 
+def docs_blocker(state: dict) -> str | None:
+    """Once implementation is under way, a reviewer should not trust an Implementation Guide
+    that is behind the code -- same deterministic check the ship gate uses."""
+    if state.get("approved") is not True:
+        return None
+    try:
+        info = reconcile.status(Project(REPO_ROOT))
+    except Exception:  # noqa: BLE001 -- a dashboard panel must never take the page down
+        return None
+    if not info["enabled"] or info["needs"] == "none":
+        return None
+    if info["needs"] == "init":
+        return "no Implementation Guide yet -- run /takshak:reconcile"
+    return f"Implementation Guide is behind the code ({len(info['changed'])} source file(s) changed) -- run /takshak:reconcile"
+
+
 def render_review_verdict(risks: list[dict[str, str]], pending: dict, state: dict, adversary_summary: dict) -> str:
     """The single at-a-glance answer a staff engineer opening this dashboard actually
     wants: is this ready for my eyes, and if not, what's blocking it."""
@@ -373,6 +394,8 @@ def render_review_verdict(risks: list[dict[str, str]], pending: dict, state: dic
         blockers.append(f"{needs_recheck} task(s) flagged needs-recheck")
     if adversary_summary.get("features") and not adversary_summary.get("converged"):
         blockers.append("SDD did not converge in its last adversary pass")
+    if docs := docs_blocker(state):
+        blockers.append(docs)
 
     if not blockers:
         if not risks:

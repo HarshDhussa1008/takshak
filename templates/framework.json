@@ -19,10 +19,25 @@
     ".py"
   ],
   "approval_gate": true,
+  "work_item_gate": true,
+  "adr_path": "docs/adr",
+  "autopilot": "suggest",
+  "structure_gate": true,
+  "fitness_gate": true,
+  "layout_extra_dirs": [],
+  "lld_path": "docs/lld",
+  "notes_path": "docs/design-notes",
+  "review_path": "docs/reviews",
+  "design_readiness_gate": true,
   "budget_alert_threshold": 95,
   "sdd_path": "docs/sdd",
   "memory_path": null,
   "languages": [
     "python"
-  ]
+  ],
+  "reconcile": true,
+  "reconcile_edit_threshold": 5,
+  "impl_doc_path": "docs/implementation",
+  "onboarding_path": "docs/onboarding",
+  "reconcile_docs": []
 }

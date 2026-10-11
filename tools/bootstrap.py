@@ -26,7 +26,7 @@ from typing import Any
 PLUGIN_ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(PLUGIN_ROOT / "hooks"))
 
-from _common import DEFAULT_CONFIG, claude_slug, read_json, write_json  # noqa: E402
+from _common import DEFAULT_CONFIG, claude_home, claude_slug, read_json, write_json  # noqa: E402
 
 TEMPLATES = PLUGIN_ROOT / "templates"
 DEFAULT_MARKETPLACE_REPO = "HarshDhussa1008/takshak"
@@ -404,7 +404,7 @@ def doctor(root: Path, data_dir: Path | None) -> int:
         if found and module and exe.startswith("python"):
             found = subprocess.run([exe, "-c", f"import {module.group(1)}"], capture_output=True, check=False).returncode == 0
         check(found, f"{key}: {cmd}", f"{key}: `{cmd}` is not runnable here")
-    if "echo '[ship]" in str(config.get("build_command")):
+    if "Configure build_command in .claude/framework.json" in str(config.get("build_command")):
         check(False, "", "build_command is still the placeholder -- /takshak:ship cannot deploy")
     if config.get("jira_integration"):
         check(bool(config.get("jira_project_key")), f"Jira project {config.get('jira_project_key')}",
@@ -426,7 +426,7 @@ def doctor(root: Path, data_dir: Path | None) -> int:
               f"`bash` on PATH resolves to {bash_on_path} (WSL's launcher stub, not Git Bash) -- "
               + (f"set CLAUDE_CODE_GIT_BASH_PATH to {git_bash!r} in Claude Code's settings"
                  if git_bash else "install Git for Windows, then set CLAUDE_CODE_GIT_BASH_PATH"))
-    mem = Path.home() / ".claude" / "projects" / claude_slug(root.resolve()) / "memory"
+    mem = claude_home() / "projects" / claude_slug(root.resolve()) / "memory"
     print(f"  [INFO] memory dir: {mem} ({'exists' if mem.is_dir() else 'not created yet'})")
     if data_dir:
         print(f"  [INFO] plugin data: {data_dir}")

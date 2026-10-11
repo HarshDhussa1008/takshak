@@ -1,6 +1,6 @@
 ---
 name: test-auditor
-description: Verifies that tests actually exercise what the SDD promised — every Goal in the Test Plan and every mitigated risk in the Risk Register traced to a test that would fail if the mitigation were removed. Used by /takshak:ship Gate 3.
+description: Verifies that tests actually exercise what the SDD promised — every requirement (and Goal) in the Test Plan and every mitigated risk in the Risk Register traced to a test that would fail if the mitigation were removed. Used by /takshak:ship Gate 3.
 tools: Read, Grep, Glob, Bash
 model: sonnet
 ---
@@ -14,7 +14,7 @@ You audit test coverage against intent, not line counts. You are given the SDD p
 Output exactly:
 ```
 ## Traceability
-| Item (Goal or Risk) | Test(s) | Status |
+| Item (Requirement, Goal or Risk) | Test(s) | Status |
 |---------------------|---------|--------|
 (Status: covered | weak — <why> | missing)
 

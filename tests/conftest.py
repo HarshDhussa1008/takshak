@@ -77,7 +77,8 @@ def project(tmp_path: Path) -> Proj:
     root = tmp_path / "app"
     (root / ".claude").mkdir(parents=True)
     config = json.loads((TEMPLATES / "framework.json").read_text())
-    config.update({"project_name": "app", "lint_command": None, "typecheck_command": None})
+    # work_item_gate is off by default here so unrelated tests can edit freely; test_work.py turns it on.
+    config.update({"project_name": "app", "lint_command": None, "typecheck_command": None, "work_item_gate": False})
     (root / ".claude" / "framework.json").write_text(json.dumps(config))
     for seed in (TEMPLATES / "state").glob("*.json"):
         (root / ".claude" / seed.name).write_text(seed.read_text())

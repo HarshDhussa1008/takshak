@@ -13,7 +13,7 @@ You translate architectural intent into fault-tolerant production code, task by 
 0. **Gate.** Read `.claude/task_state.json`. If `approved` is not `true`, stop: *"The plan is not approved yet — review the task list and risk register, then reply approved."* Write no code. (A PreToolUse hook enforces this too; do not try to set the flag yourself — it will be denied.)
 1. **Ingest.** Read the SDD at `sdd_path`. Load `references/implementation-flow.md` and the standards reference for the project's language (`references/python-standards.md` for Python; for other languages follow the project's CLAUDE.md and existing code conventions).
 2. **Skip-check.** Any task with `needs_recheck: true` gets re-planned against the amended SDD first; show the user the revised plan for that task in two lines, then continue.
-3. **Execute** the next unblocked task (or `$ARGUMENTS` if given). Mark it `in_progress` in both TaskUpdate and `task_state.json`. Stay in the bug loop below. When its acceptance criteria pass, mark it `completed` and commit with a message that references `T<id>` and/or its Jira key.
+3. **Execute** the next unblocked task (or `$ARGUMENTS` if given). Mark it `in_progress` in both TaskUpdate and `task_state.json`. Stay in the bug loop below. When its acceptance criteria pass, mark it `completed`, then invoke the `takshak:reconcile` skill (`task <id>`) so the Implementation Guide reflects the code you just wrote, and commit (guide included) with a message that references `T<id>` and/or its Jira key. The Stop hook asks for this too if you forget; `reconcile` is incremental, so doing it per task is cheap.
 4. **Verify** with the Pre-Commit Audit in `references/implementation-flow.md` before declaring the feature done.
 
 ## The bug loop
@@ -21,6 +21,9 @@ You translate architectural intent into fault-tolerant production code, task by 
 Implementation is implement → bug → fix → bug → fix. That loop is the normal state, not a detour, and **nothing in this skill may interrupt it to ask process questions.** When a bug is found: fix it, keep going.
 
 The quality-gate hook reports lint and type findings after each edit as additional context. Fix them in the same loop; they are not questions for the user.
+
+### When the design itself is wrong → `/takshak:redesign`
+Staging an amendment is for *small* gaps the design can absorb. If the fix would overturn a decision (an accepted ADR), change a contract other code or teams depend on, change a requirement, or invalidate several pending tasks, **stop and invoke `takshak:redesign`** instead of patching around it. The gate blocks source edits while a design change is open — that pause is the point: the correction is recorded as an ADR and approved before more code is built on the flaw. Bugs in the code (not the design) stay in the loop below.
 
 ### Amendment staging (never inline)
 
@@ -63,15 +66,19 @@ If the Stop hook or a prompt hook relays a **BUDGET** directive: write the check
 ### Correction capture (style signal)
 When the user rewrites, reverts or corrects what you just produced, stage a `style_candidates` entry (what you did, what they changed it to, the inferred rule). It is flushed into a `feedback` memory with the same batch. Nothing rewrites its own skill files; the signal re-enters at design time.
 
+### Structure and architecture rules
+Follow `ARCHITECTURE.md` and `CONVENTIONS.md` (session start points at them). After each edit the fitness hook reports any import that breaks a rule in `.claude/fitness.json`: fix the dependency; never edit the rule or its baseline to make a violation disappear. Documents go where `tools/structure.py check` expects them — the gate refuses an ADR, SDD or LLD written to the wrong directory.
+
 ## Critical Directives
 - **No placeholder logic** in critical paths: no `pass`, `TODO`, or stubs.
 - **Types** on every signature.
 - **Name things clearly** instead of writing docblocks.
-- **Tests in the same pass** as the implementation, covering the risks the task `mitigates`.
+- **Tests in the same pass** as the implementation, covering the risks the task `mitigates`. Mark each test with the requirements it proves — `# covers: R1, R3` (or `// covers: R1`) — so `tools/trace.py check --mode ship` can show nothing was left untested.
 
 ## Handoff
-When every task is `completed`:
+When every task is `completed`, run the closing pass — invoke `takshak:reconcile` with `final` — then:
 ```
 Implementation complete. Files created: <list>. Files modified: <list>. Tests: <n>.
+To understand what was built, read: <impl_doc> (start with its Gist).
 Next: /takshak:retro (while it's fresh), then /takshak:ship staging
 ```

@@ -1,0 +1,48 @@
+# LLD: {{feature title}}
+
+<!-- frozen-from: {{hash}} -->
+> Low-level design, derived from the frozen SDD (`{{sdd path}}`). It decides nothing new: every choice here
+> follows an accepted ADR or the SDD. If writing it exposes a flaw in the design, stop and run `/takshak:redesign`.
+
+## Files and layout
+| Path | New / changed | Purpose |
+|------|---------------|---------|
+| `{{path}}` | new | {{one line}} |
+
+## Module specifications
+### `{{module path}}`
+- Responsibility: {{one line, from the Module Map}}
+- Public interface:
+  ```
+  {{exact signatures with types}}
+  ```
+- Invariants and pre/postconditions: {{what callers may rely on}}
+- Algorithm / state transitions: {{pseudocode or state table for anything non-trivial}}
+- Errors raised or returned: {{type -> condition}}
+- Depends on: {{modules, with the exact functions used}}
+
+## Sequences
+```mermaid
+sequenceDiagram
+    participant {{ModuleA}}
+    participant {{ModuleB}}
+    {{ModuleA}}->>{{ModuleB}}: {{function(args) -> result}}
+```
+
+## Data schema
+{{DDL / schema / migration steps in order, with index and constraint rationale, and how each step is reversed.}}
+
+## Error mapping
+| Condition | Internal error | Surfaced as | Retry? |
+|-----------|----------------|-------------|--------|
+| {{condition}} | {{exception / code}} | {{status + body}} | {{yes/no, policy}} |
+
+## Configuration
+| Setting | Default | Effect | Validated where |
+|---------|---------|--------|-----------------|
+| {{NAME}} | {{value}} | {{one line}} | {{function}} |
+
+## Test mapping
+| Module | Tests to write | Requirements covered | Risks mitigated |
+|--------|----------------|----------------------|-----------------|
+| `{{path}}` | {{test names}} | {{R1, NFR1}} | {{risk names}} |

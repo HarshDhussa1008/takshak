@@ -47,8 +47,23 @@ DEFAULT_CONFIG: dict[str, Any] = {
     "project_typecheck_command": "python -m mypy . --ignore-missing-imports",
     "gate_extensions": [".py"],
     "approval_gate": True,
+    "work_item_gate": True,
+    "adr_path": "docs/adr",
+    "autopilot": "suggest",
+    "structure_gate": True,
+    "fitness_gate": True,
+    "layout_extra_dirs": [],
+    "lld_path": "docs/lld",
+    "notes_path": "docs/design-notes",
+    "review_path": "docs/reviews",
+    "design_readiness_gate": True,
     "budget_alert_threshold": 95,
     "sdd_path": "docs/sdd",
+    "reconcile": True,
+    "reconcile_edit_threshold": 5,
+    "impl_doc_path": "docs/implementation",
+    "onboarding_path": "docs/onboarding",
+    "reconcile_docs": [],
     "memory_path": None,
     "languages": ["python"],
 }
@@ -166,6 +181,12 @@ def claude_slug(path: Path) -> str:
     return re.sub(r"[^A-Za-z0-9]", "-", str(path))
 
 
+def claude_home() -> Path:
+    """Claude Code's config directory: $CLAUDE_CONFIG_DIR when set, else ~/.claude."""
+    env = os.environ.get("CLAUDE_CONFIG_DIR")
+    return Path(os.path.expanduser(env)) if env else Path.home() / ".claude"
+
+
 def memory_dir(project: Project, payload: dict[str, Any]) -> Path:
     override = project.config().get("memory_path")
     if override:
@@ -175,7 +196,7 @@ def memory_dir(project: Project, payload: dict[str, Any]) -> Path:
         # The transcript lives in the exact project folder Claude Code uses, so its parent
         # is authoritative -- no need to re-derive the slug and risk getting it wrong.
         return Path(transcript).parent / "memory"
-    return Path.home() / ".claude" / "projects" / claude_slug(project.root) / "memory"
+    return claude_home() / "projects" / claude_slug(project.root) / "memory"
 
 
 def emit(payload: dict[str, Any]) -> None:

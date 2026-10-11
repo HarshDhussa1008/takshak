@@ -1,0 +1,25 @@
+# Design notes: {{feature title}}
+
+> The record of the conversation that produced the design: what was asked, what was assumed, what
+> was decided and by whom. Decisions themselves are ADRs (`docs/adr/`); this is the context around them.
+
+## Problem and context
+{{What is wrong or missing today, who feels it, and what a good outcome looks like.}}
+
+## Stakeholders and constraints
+- {{Who is affected / who must approve / hard constraints: deadline, compliance, platform, budget}}
+
+## What exists today
+{{Relevant current code, services and conventions, found by reading the repo -- with paths.}}
+
+## Assumptions
+- {{Assumption}} -- confirmed by: {{person or "unconfirmed"}}
+
+## Discussion log
+- {{date}} {{question asked}} -> {{answer}}
+
+## Open questions
+- [ ] {{question}} -- owner: {{who}}
+
+## Decisions made (see ADRs)
+- {{ADR-0001: one line}}

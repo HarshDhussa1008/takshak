@@ -3,6 +3,13 @@ checkpoint.json
 task_state.json
 anti_pattern_registry.json
 amendments_pending.json
+reconcile_state.json
+work_items.json
+flow_state.json
+flow_state.json.tmp
+work_items.json.tmp
+reconcile_state.json.tmp
+reconcile_index.tmp
 budget.json
 budget.json.tmp
 budget_history.jsonl
@@ -12,3 +19,5 @@ takshak_hook_state.json.tmp
 dashboard.html
 inbox/
 settings.local.json
+design_changes.json
+design_changes.json.tmp

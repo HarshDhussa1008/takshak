@@ -14,21 +14,27 @@ Input: `$ARGUMENTS`
 
 ## Interaction Protocol
 
-### Step 1 — Gate: is this SDD ready?
+### Step 1 — Gate: is this design ready?
 
-Read the SDD and **refuse** if any of these is true — say which, and stop:
+First run the code-checked readiness gate (skip only when `design_readiness_gate` is `false` in `.claude/framework.json`, which is for legacy SDDs that predate requirement IDs):
+```bash
+bash "${CLAUDE_PLUGIN_ROOT}/hooks/run.sh" "${CLAUDE_PLUGIN_ROOT}/tools/design.py" readiness --project "${CLAUDE_PROJECT_DIR:-$PWD}" --sdd <SDD path>
+```
+Exit 1 means the design is not ready (untestable requirements, no accepted ADR, unhardened, not frozen, no LLD, open questions…): print the `FAIL` lines, say *"This design is not ready for breakdown — run /takshak:design to finish it."* and stop.
+
+Then read the SDD and **refuse** if any of these is true — say which, and stop:
 
 - No `## Risk Register`, or it is empty
 - Any of the 10 failure classes from /takshak:design has no verdict
 - Any `Critical` risk whose Status is not `mitigated`
-- No `## Test Plan`, or a Goal with no test row
+- No `## Test Plan`, or a requirement with no test row
 
 Refusal text: `"This SDD has not been hardened — <reason>. Run /takshak:design on it first."`
 
 An unmitigated `High` is a warning, not a block: list them and ask whether to proceed.
 
 ### Step 2 — Read SDD + Jira config (in parallel)
-- Extract the work units from the SDD (do not hold the whole document in context)
+- Extract the work units from the SDD **and the LLD** (`docs/lld/<slug>.md`): tasks follow the LLD's modules and file layout, so the plan matches what will actually be written. Do not hold whole documents in context.
 - Read `.claude/framework.json`: `jira_integration`, `jira_project_key`, `jira_subtask_type`
 
 If `jira_integration` is true:
@@ -41,7 +47,7 @@ If false: skip Jira and note "(Jira disabled)".
 - **At most 8 tasks.** More means the SDD should be split — say so and stop.
 - **Size:** S (< 2h), M (2–4h), L (> 4h — split it before creating anything).
 - **No vague titles:** never "misc", "cleanup", "refactor", "tests", "other". Every title is an imperative, verifiable outcome.
-- Each task: title, description (what + acceptance criteria), size, and which Risk Register rows it mitigates (by risk name) — this is what lets the ship gate trace mitigations to tests.
+- Each task: title, description (what + acceptance criteria), size, which Risk Register rows it mitigates (by risk name), and **which requirement IDs it delivers** (`R1`, `NFR2`, …). Every requirement in the SDD must be delivered by at least one task, and every task must deliver at least one requirement.
 
 ### Step 4 — Order by dependency
 Show the dependency tree before creating anything:
@@ -87,6 +93,7 @@ Write `.claude/checkpoint.json` with `active_skill: "breakdown"`, `phase: 1`, `p
       "needs_recheck": false,
       "blocked_by": ["<task ids>"],
       "mitigates": ["<risk names>"],
+      "requirements": ["<R1>", "<NFR2>"],
       "jira_key": "<key or null>",
       "acceptance_criteria": ["<criterion>"]
     }
@@ -109,10 +116,16 @@ SDD: <sdd path>
 ### Step 9 — Checkpoint
 `phase: 3`, `phase_label: "Tasks created, awaiting approval"`, `next_step: "User reviews the plan and replies approved"`.
 
+### Step 9.5 — Traceability gate
+```bash
+bash "${CLAUDE_PLUGIN_ROOT}/hooks/run.sh" "${CLAUDE_PLUGIN_ROOT}/tools/trace.py" check --mode plan --project "${CLAUDE_PROJECT_DIR:-$PWD}"
+```
+Exit 1 lists requirements no task delivers and tasks that trace to no requirement. Fix the task list (or the SDD's Requirements table, if the task is real and a requirement is missing) before presenting the plan. An SDD with no requirement IDs is legacy: add the table first or note that traceability is off.
+
 ### Step 10 — Handoff
 End with the dependency tree and:
 ```
-Review the plan and risk coverage above, then reply "approved" to start implementation.
+Review the plan and risk coverage above (design pack: docs/reviews/<slug>.html), then reply "approved" to approve the design and the plan together and start implementation.
 Commit messages should reference the task (T<id>) or Jira key so drift detection can map them.
 ```
 

@@ -1,0 +1,95 @@
+# Onboarding Guide: {{project name}}
+
+> Written for an engineer on their first week. It teaches the codebase in the order you should learn it.
+> Every statement about the code cites `file:line`; anything not confirmed from the code is marked
+> `inferred` or `unknown -- ask`. Maintained by `/takshak:reconcile`; the precise reference is the
+> Implementation Guide (`docs/implementation/`), the map is `ARCHITECTURE.md`.
+> Last verified: {{ISO date}} at commit `{{short sha}}` · Coverage: {{N of M modules}}
+
+## 1. Start here
+**What this is.** {{Two sentences: the problem it solves and who relies on it.}}
+
+**What happens when it runs.** {{Five lines, plain language: trigger -> input -> main work -> output -> what is recorded.}}
+
+**Read in this order.** 1. {{`file`: why first}} 2. {{`file`: ...}} 3. {{`file`: ...}} (about {{N}} minutes)
+
+## 2. The system in one picture
+{{Who or what triggers it, what it depends on, what it produces. Name the real external systems.}}
+```mermaid
+flowchart LR
+    Trigger[{{trigger}}] --> Core[{{main component}}]
+    Core --> Store[({{data store}})]
+    Core --> Out[{{output / external service}}]
+```
+
+## 3. Words you will see
+| Term | Meaning here | Where it appears |
+|------|--------------|------------------|
+| {{term}} | {{plain definition}} | `{{file:line}}` |
+
+## 4. Repository tour
+| Path | What lives here | Touch it when |
+|------|-----------------|---------------|
+| `{{path}}` | {{one line}} | {{situation}} |
+
+Files you can ignore at first: {{list, with the reason}}.
+
+## 5. Follow one run end to end
+{{Pick the most common scenario and walk it as numbered steps; each step names the function, what it does and why.}}
+```mermaid
+sequenceDiagram
+    participant A as {{caller}}
+    participant B as {{component}}
+    participant C as {{dependency}}
+    A->>B: {{call}}
+    B->>C: {{call}}
+    C-->>B: {{result}}
+    B-->>A: {{result}}
+```
+1. `{{function}}` (`{{file:line}}`) -- {{what and why}}
+
+**When it goes wrong.** {{The main failure path, who finds out and how, with `file:line`.}}
+
+## 6. Data and state
+{{What is stored, where, who writes it, who reads it, and what the states mean.}}
+```mermaid
+stateDiagram-v2
+    [*] --> {{State1}}
+    {{State1}} --> {{State2}}: {{event}}
+```
+| Data | Stored in | Written by | Read by | Notes |
+|------|-----------|------------|---------|-------|
+| {{item}} | {{store}} | `{{file:line}}` | `{{file:line}}` | {{key, lifetime, gotcha}} |
+
+## 7. Module walkthrough
+### {{module or file}}
+- **Job:** {{one sentence}}
+- **Key functions:** `{{name}}` (`{{file:line}}`) -- {{inputs -> outputs, side effects}}
+- **Why it is like this:** {{cited reason, or `unknown -- ask`}}
+- **Watch out:** {{surprises, ordering, hidden coupling}}
+
+## 8. Configuration and environment
+| Name | Where set | Effect | Safe to change? |
+|------|-----------|--------|-----------------|
+| `{{NAME}}` | `{{file:line}}` | {{effect}} | {{yes/no and why}} |
+
+## 9. Run it, test it, debug it
+- Run: {{command, or how it is triggered in production}}
+- Test: {{command, or "no tests exist"}}
+- Debug: {{where logs go, what to search for, how to replay an input}}
+- Verified by running? {{yes / no -- say which of the above were only read, not run}}
+
+## 10. Sharp edges
+- {{Specific hazard, cited, and what to do instead.}}
+
+## 11. How to make common changes
+| I want to... | Change this | Then check |
+|--------------|-------------|------------|
+| {{add / alter X}} | `{{file:function}}` | {{test or manual check}} |
+
+## 12. Open questions for the maintainers
+- {{What the code cannot tell us, with the evidence.}}
+
+## 13. Check your understanding
+1. {{A question answerable only by having followed section 5.}}
+2. {{A small change to attempt, with the file to start in.}}

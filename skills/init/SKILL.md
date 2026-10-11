@@ -9,8 +9,9 @@ argument-hint: "[--team] [--migrate]"
 ## Step 1 — Run the bootstrap
 ```bash
 bash "${CLAUDE_PLUGIN_ROOT}/hooks/run.sh" "${CLAUDE_PLUGIN_ROOT}/tools/bootstrap.py" init \
-  --project "${CLAUDE_PROJECT_DIR:-$PWD}" --plugin-data "${CLAUDE_PLUGIN_DATA}" $ARGUMENTS
+  --project "${CLAUDE_PROJECT_DIR:-$PWD}" --plugin-data "${CLAUDE_PLUGIN_DATA}" [--team] [--migrate]
 ```
+Add `--team` / `--migrate` only when the arguments (`$ARGUMENTS`) say so. Never paste the arguments into the command: they may be free text (a description of the project, its stack, its commands) and the shell would choke on it. Treat free text as answers for Step 2.
 It is idempotent and never overwrites existing config or state. Relay its report to the user as a short checklist.
 
 - If it reports **legacy copy-installed hooks**, ask the user whether to migrate, then re-run with `--migrate` (removes the old `.claude/hooks/*.py` wiring and files so hooks don't fire twice).
@@ -23,6 +24,13 @@ Read the new `.claude/framework.json` and ask, in one message, only about what i
 - Slack channel for deploy notices (optional)
 
 Edit `framework.json` with their answers.
+
+## Step 2.5 — Structure and architecture map
+Offer (one line) to lay down the canonical layout so every feature's documents land in the same places and the repo has a written architecture:
+```bash
+bash "${CLAUDE_PLUGIN_ROOT}/hooks/run.sh" "${CLAUDE_PLUGIN_ROOT}/tools/structure.py" scaffold --project "${CLAUDE_PROJECT_DIR:-$PWD}"
+```
+It creates `docs/{adr,sdd,lld,design-notes,implementation,reviews}/`, a starter `ARCHITECTURE.md` and `CONVENTIONS.md` (fill their `{{placeholders}}` by reading the repo — show the diff first) and `.claude/fitness.json`. On a repo that already has code, run `structure.py fitness --baseline` so today's violations are tolerated and only new ones fail.
 
 ## Step 3 — CLAUDE.md
 If CLAUDE.md was just created from the template, offer to fill its placeholders by reading the repo (entry points, stack, test layout) — show the diff before writing.

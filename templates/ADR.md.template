@@ -1,0 +1,24 @@
+# ADR-<NNNN>: <decision title>
+
+- Status: proposed
+- Date: <ISO date>
+- Requirements: <R1, R3 — the requirement IDs this decision serves, or "-">
+- Supersedes: -
+
+## Context
+<The forces at play: the requirement, the constraint, what makes this a real decision. Facts, not advocacy.>
+
+## Options considered
+### Option A — <name>
+<How it works, what it costs, where it breaks.>
+
+### Option B — <name>
+<How it works, what it costs, where it breaks.>
+
+## Decision
+<The option chosen, in one or two sentences, and the single deciding reason.>
+
+## Consequences
+- Positive: <what gets easier or safer>
+- Negative: <what we are accepting; what gets harder>
+- Revisit when: <the observable condition that should reopen this decision>

@@ -28,6 +28,12 @@ Confirm: "Shipping **<project_name>** to **<env>**. Proceed? (yes/no)"
 - `.claude/amendments_pending.json` has no unflushed `candidates`.
 - No task has `needs_recheck: true`.
 - No `Critical` risk is unmitigated.
+- The Implementation Guide is in sync with the code: `bash "${CLAUDE_PLUGIN_ROOT}/hooks/run.sh" "${CLAUDE_PLUGIN_ROOT}/tools/reconcile.py" check --project "${CLAUDE_PROJECT_DIR:-$PWD}"` exits 0 (skip when `reconcile` is `false`). Exit 1 means the docs are behind the code — run `/takshak:reconcile final` first.
+
+- Requirements are traced end to end: `bash "${CLAUDE_PLUGIN_ROOT}/hooks/run.sh" "${CLAUDE_PLUGIN_ROOT}/tools/trace.py" check --mode ship --project "${CLAUDE_PROJECT_DIR:-$PWD}"` exits 0 (every requirement has a task and a `covers:`-marked test; no orphan tasks). An SDD without requirement IDs passes with a note.
+- The decision log is sound: `tools/adr.py check` exits 0 (alternatives recorded, supersession links consistent).
+- The repository layout is consistent and the architecture rules hold: `tools/structure.py check` and `tools/structure.py fitness` both exit 0 (`fitness` ignores baselined violations; skip when there is no `.claude/fitness.json`).
+- No design change is still open: `tools/design_change.py status` shows none `open`/`proposed`/`approved`.
 
 FAIL on prod → hard stop. FAIL on staging → warn with the list, continue.
 
@@ -59,7 +65,7 @@ Checkpoint phase 4.
 ### Step 5 — Post-deploy sync
 
 **a) Jira (only if `jira_integration`):** target status = `jira_transitions[<env>]`. If the env has no entry, comment only.
-For each task with a `jira_key`, and for `parent_jira_key`: use the Jira MCP (`getTransitionsForJiraIssue` + `transitionJiraIssue`, or `jira_get_transitions` + `jira_transition_issue`) to find the transition whose target status name matches, and apply it. No match → log `[JIRA] no transition to "<status>" for <key>` and continue.
+For each task with a `jira_key`, each *closed work item* in `.claude/work_items.json` with a `jira_key` (ad-hoc changes opened by `/takshak:work`), and for `parent_jira_key`: use the Jira MCP (`getTransitionsForJiraIssue` + `transitionJiraIssue`, or `jira_get_transitions` + `jira_transition_issue`) to find the transition whose target status name matches, and apply it. No match → log `[JIRA] no transition to "<status>" for <key>` and continue.
 Comment on the parent:
 ```
 🚀 Deployed to <env> by Claude Code (takshak)
@@ -74,6 +80,8 @@ Branch: <branch> | <timestamp> | Tasks: <keys>
 ```bash
 bash "${CLAUDE_PLUGIN_ROOT}/hooks/run.sh" "${CLAUDE_PLUGIN_ROOT}/tools/metrics.py" record --project "${CLAUDE_PROJECT_DIR:-$PWD}" --event ship --data '{"env": "<env>", "result": "pass"}'
 ```
+
+On success, record the stage: `bash "${CLAUDE_PLUGIN_ROOT}/hooks/run.sh" "${CLAUDE_PLUGIN_ROOT}/tools/flow.py" mark shipped --project "${CLAUDE_PROJECT_DIR:-$PWD}"` (staging counts; a prod ship after a staging ship simply marks it again).
 
 ### Step 6 — Failure memory + Jira comment
 Every failed gate writes a `project` memory (see /takshak:remember for the format) and, if Jira is on, comments on the parent:

@@ -1,0 +1,97 @@
+# Implementation Guide: <feature title>
+
+> As-built record of what the code actually does. Maintained by `/takshak:reconcile`; never hand-edit a
+> claim without checking the code. The SDD (`<sdd path>`) is the *intent*; this guide is the *truth*.
+> Last reconciled: <ISO date> at commit `<short sha>` · Status: <in progress | complete>
+
+## Gist
+<!-- ≤ 25 lines. The one page a new engineer or a stakeholder reads instead of the diff. -->
+**What it is.** <two sentences: what was built and for whom.>
+
+**How it works, in five lines.**
+1. <entry point → what happens first (file:line)>
+2. <the core decision or transformation (file:line)>
+3. <where state lives and how it is changed (file:line)>
+4. <what happens on failure (file:line)>
+5. <what it emits: logs / metrics / events>
+
+**Start reading here.** `<file>` (entry) → `<file>` (core logic) → `<file>` (storage/IO). Then the tests: `<test file>`.
+
+**Run it / verify it.** `<command>` · tests: `<command>` · config knobs: see *Configuration*.
+
+**Differs from the design.** <N divergences — headline of each; full list in *Divergences from the SDD*.>
+
+**Known gaps.** <what is deliberately missing or deferred, one line each.>
+
+## Module map
+<!-- One row per module/package that implements the feature. `covers` drives drift detection. -->
+<!-- covers: <path/to/module/, path/to/file.py> -->
+| Module | Responsibility | Depends on | Public surface |
+|--------|----------------|------------|----------------|
+| `<path>` | <one line> | `<other module>` | `<functions / classes / routes>` |
+
+## Control flow
+<!-- Derived from the call paths in the code, not from the SDD's planned diagram. -->
+<!-- covers: <entry-point files and the modules they call> -->
+```mermaid
+sequenceDiagram
+    participant Client
+    participant <EntryModule>
+    participant <CoreModule>
+    participant <Store>
+    Client->>EntryModule: <request>
+    EntryModule->>CoreModule: <call (file:line)>
+    CoreModule->>Store: <read/write>
+    Store-->>CoreModule: <result>
+    CoreModule-->>EntryModule: <result>
+    EntryModule-->>Client: <response>
+```
+Failure path: <what happens when `<dependency>` fails, with file:line of the handler.>
+
+## API contracts (as built)
+<!-- Every row verified against the route/handler/schema code just read. Cite file:line. -->
+<!-- covers: <route/handler/schema files> -->
+| Method & path | Auth | Request (field: type, required?) | Success response | Errors (status → body) | Source |
+|---------------|------|----------------------------------|------------------|------------------------|--------|
+| `<METHOD /path>` | <scheme> | `<field: type>` | `<status + shape>` | `<status → shape>` | `<file:line>` |
+
+Non-HTTP interfaces (CLI flags, events, queues, public functions other code calls) go in the same table with the
+interface in the first column.
+
+## Data models (as built)
+<!-- covers: <model/schema/migration files> -->
+| Entity | Fields (name: type) | Constraints / indexes | Source |
+|--------|---------------------|-----------------------|--------|
+| `<name>` | `<fields>` | `<constraints>` | `<file:line>` |
+
+## Configuration
+<!-- covers: <config files> -->
+| Setting / env var | Default | Effect | Read at |
+|-------------------|---------|--------|---------|
+| `<NAME>` | `<default>` | <one line> | `<file:line>` |
+
+## Errors and failure behaviour
+<!-- covers: <modules that raise or handle errors> -->
+| Condition | Raised / returned | Handled where | User-visible result |
+|-----------|-------------------|---------------|---------------------|
+| `<condition>` | `<type or code>` | `<file:line>` | `<what the caller sees>` |
+
+## Tests
+| Behaviour | Test | Covers risk |
+|-----------|------|-------------|
+| <what is asserted> | `<test file::name>` | `<Risk Register row, or "-">` |
+
+## Divergences from the SDD
+<!-- ADOPT MODE (no SDD exists): replace this whole section with "## Inferred intent and open questions" --
+     rows of: observation | evidence (file:line) | what a maintainer should confirm.
+     The reviewer's section. Every place the code is not what the SDD said, and whether it was
+     intentional. Each one is also staged as an amendment so the SDD gets corrected. -->
+| SDD section | SDD said | Code does | Why | Amendment |
+|-------------|----------|-----------|-----|-----------|
+| `<section>` | <planned> | <actual (file:line)> | <reason, or "unexplained — ask"> | staged / folded / none |
+
+_None yet._ <!-- replace with the table above once there is a divergence -->
+
+## Change log
+<!-- One line per reconcile pass. Newest first; keep the last 10. -->
+- <ISO date> · `<short sha>` · <task ids or "final"> · <sections touched>

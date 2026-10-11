@@ -18,7 +18,7 @@ from conftest import Proj
 def test_hooks_are_silent_outside_takshak_projects(tmp_path: Path) -> None:
     bare = Proj(tmp_path / "bare", tmp_path / "data")
     bare.root.mkdir()
-    for name in ("session_start", "prompt_submit", "approval_gate", "quality_gate", "stop_checklist"):
+    for name in ("session_start", "prompt_submit", "approval_gate", "quality_gate", "reconcile_tracker", "stop_checklist"):
         result = bare.hook(name, {"prompt": "approved", "tool_name": "Edit", "tool_input": {"file_path": "x.py"}})
         assert result.stdout == "", name
     assert not (bare.root / ".claude").exists()
