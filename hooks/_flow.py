@@ -110,6 +110,10 @@ def next_step(project: Project) -> dict[str, Any]:
             return step("implementing", "/takshak:sdd-implementer", "sdd-implementer", "claude",
                         f"{len(open_tasks)} task(s) left; next is {t.get('id')}: {t.get('title')}" + (" (needs re-planning first)" if recheck else ""),
                         task=str(t.get("id")))
+        gaps = trace.problems(trace.build(project), "ship")
+        if gaps:
+            return step("tracing", "add the missing `# covers: R<n>` test markers (or defer the requirement in the SDD)", "sdd-implementer", "claude",
+                        f"{len(gaps)} traceability gap(s) block shipping, e.g. {gaps[0]}")
         info = reconcile.status(project) if reconcile.enabled(project) else {"final": True}
         if not info.get("final"):
             return step("closing-docs", "/takshak:reconcile final", "reconcile", "claude",

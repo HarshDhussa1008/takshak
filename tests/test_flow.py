@@ -169,3 +169,16 @@ def test_cli_prints_a_line_and_json(project: Proj, plan) -> None:
     project.write(".claude/task_state.json", plan(approved=False))
     assert tool("flow", project, "next").stdout.startswith("[NEXT] awaiting-approval")
     assert json.loads(tool("flow", project, "next", "--json").stdout)["actor"] == "user"
+
+
+def test_untraced_requirement_stops_the_flow_before_closing_docs(project: Proj, plan) -> None:
+    project.write("docs/sdd/app.md", "# SDD: app\n\n## Requirements\n| ID | Requirement | Acceptance | Priority |\n|----|-------------|-----------|----------|\n| R1 | does a thing | observable | Must |\n")
+    state = plan(approved=True, statuses=("completed", "completed"))
+    state["sdd_path"] = "docs/sdd/app.md"
+    for t in state["tasks"]:
+        t["requirements"] = ["R1"]
+    project.write(".claude/task_state.json", state)
+    n = nxt(project)
+    assert n["stage"] == "tracing" and n["actor"] == "claude" and "R1" in n["reason"]
+    project.write("tests/test_app.py", "# covers: R1\ndef test_x():\n    pass\n")
+    assert nxt(project)["stage"] != "tracing"
