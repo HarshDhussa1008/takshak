@@ -361,7 +361,39 @@ def profile_mode(project: Project) -> str:
 _REDIRECT = re.compile(r"(?<![0-9&<>])(?:\d?>>?|&>>?)\s*(?!&)([^\s;|&<>()]+)")
 _QUOTED = re.compile(r"\"[^\"]*\"|'[^']*'")
 _PY_OPEN_W = re.compile(r"""open\(\s*['"]([^'"]+)['"]\s*,\s*['"][wa]""")
+_PY_OPEN_VAR_W = re.compile(r"""open\(\s*[A-Za-z_][\w.]*\s*,\s*['"][wa]""")
+_PATH_LITERAL = re.compile(r"""['"]([\w./\\-]+\.[A-Za-z0-9]{1,6})['"]""")
 _PY_PATH_W = re.compile(r"""Path\(\s*['"]([^'"]+)['"]\s*\)\.write_(?:text|bytes)""")
+
+
+def _split_commands(command: str) -> list[str]:
+    """Split on && || ; | and newlines that are not inside quotes, so `python3 -c "a; b"` stays one command."""
+    out: list[str] = []
+    buf: list[str] = []
+    quote = ""
+    i = 0
+    while i < len(command):
+        ch = command[i]
+        if quote:
+            buf.append(ch)
+            if ch == "\\" and quote == '"' and i + 1 < len(command):
+                buf.append(command[i + 1])
+                i += 1
+            elif ch == quote:
+                quote = ""
+        elif ch in "\"'":
+            quote = ch
+            buf.append(ch)
+        elif ch in ";|\n" or command.startswith("&&", i):
+            out.append("".join(buf))
+            buf = []
+            if command.startswith(("&&", "||"), i):
+                i += 1
+        else:
+            buf.append(ch)
+        i += 1
+    out.append("".join(buf))
+    return out
 
 
 def bash_write_targets(command: str) -> list[str]:
@@ -376,7 +408,7 @@ def bash_write_targets(command: str) -> list[str]:
             if "<<" in ln:
                 command = "\n".join(lines[: i + 1])
                 break
-    for segment in re.split(r"&&|\|\||;|\n|\|", command):
+    for segment in _split_commands(command):
         segment = segment.strip()
         if not segment:
             continue
@@ -412,6 +444,8 @@ def bash_write_targets(command: str) -> list[str]:
             targets += [a[3:] for a in parts[1:] if a.startswith("of=")]
         elif cmd in ("python", "python3"):
             targets += _PY_OPEN_W.findall(segment) + _PY_PATH_W.findall(segment)
+            if _PY_OPEN_VAR_W.search(segment):  # open(path_var, 'w'): the target is unknowable, so any file named here may be it
+                targets += _PATH_LITERAL.findall(segment)
     out = []
     for t in targets:
         t = t.strip("'\"")

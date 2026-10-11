@@ -383,3 +383,14 @@ def test_mapping_guess_understands_renamed_types() -> None:
     types = [{"name": n} for n in ("Initiative", "Feature", "Work Item", "Defect", "Sub-task")]
     guess = _work.guess_mapping(types)
     assert guess == {"epic": "Initiative", "story": "Feature", "task": "Work Item", "bug": "Defect", "subtask": "Sub-task"}
+
+
+@pytest.mark.parametrize("command", [
+    "python3 -c \"import json;d=json.load(open('.claude/task_state.json'));d['approved']=True;json.dump(d,open('.claude/task_state.json','w'))\"",
+    "sed -i 's/\"approved\": false/\"approved\": true/' .claude/task_state.json",
+    "python3 -c \"import json;p='.claude/task_state.json';d=json.load(open(p));d.update(approved=True);open(p,'w').write(json.dumps(d))\"",
+])
+def test_bash_self_approval_is_denied_in_any_syntax(project, command: str) -> None:  # type: ignore[no-untyped-def]
+    project.write(".claude/task_state.json", {"tasks": [{"id": "1"}], "approved": False})
+    out = project.hook_json("approval_gate", {"hook_event_name": "PreToolUse", "tool_name": "Bash", "tool_input": {"command": command}})
+    assert out.get("hookSpecificOutput", {}).get("permissionDecision") == "deny"

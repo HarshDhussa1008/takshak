@@ -31,6 +31,7 @@ import _work as work  # noqa: E402
 from _common import Project, emit, project_root, read_json, read_payload, run_safely  # noqa: E402
 
 APPROVED_TRUE = re.compile(r'"approved"\s*:\s*true')
+BASH_APPROVED_TRUE = re.compile(r"approved\W{0,8}(true|1)\b", re.IGNORECASE)  # any quoting or language: ['approved']=True, "approved": true, approved: 1
 CHANGE_APPROVED = re.compile(r'"status"\s*:\s*"approved"')
 
 
@@ -160,7 +161,7 @@ def main() -> None:
         path, raw = bash_target(project, command)
         if path is None:
             return
-        if path == project.task_state.resolve() and APPROVED_TRUE.search(command) \
+        if path == project.task_state.resolve() and (APPROVED_TRUE.search(command) or BASH_APPROVED_TRUE.search(command)) \
                 and read_json(project.task_state).get("approved") is not True:
             deny("Only the user can approve the plan. Ask them to reply 'approved'; a hook sets the flag.")
             return
