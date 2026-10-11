@@ -51,7 +51,7 @@ def blocking(project: Project) -> list[dict[str, Any]]:
 def open_change(project: Project, title: str, trigger: str, kind: str = "flaw", task_id: str | None = None) -> dict[str, Any]:
     data = load(project)
     data["counter"] += 1
-    item = {
+    item: dict[str, Any] = {
         "id": f"DC-{data['counter']}", "title": title.strip()[:200], "trigger": trigger.strip(),
         "kind": kind if kind in KINDS else "flaw", "status": "open", "found_in_task": task_id,
         "adr": None, "affected_tasks": [], "affected_sections": [], "opened_at": now_iso(),

@@ -39,8 +39,8 @@ def main() -> None:
         print(json.dumps(report, indent=2) if args.json else trace.render_markdown(report))
         return
     found = trace.problems(report, args.mode)
-    for p in found:
-        print(f"[trace] {p}")
+    for msg in found:
+        print(f"[trace] {msg}")
     if not found:
         s = report["summary"]
         print("[trace] " + ("no requirement IDs to trace" if not report["has_ids"] else

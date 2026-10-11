@@ -25,6 +25,7 @@ import os
 import re
 import sys
 from pathlib import Path, PurePosixPath
+from typing import Any
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent / "hooks"))
 
@@ -120,7 +121,7 @@ def _module_key(rel: str) -> str:
     return f"{parts[0]}/"
 
 
-def inventory(project: Project, sub: str = "") -> dict[str, object]:
+def inventory(project: Project, sub: str = "") -> dict[str, Any]:
     """Deterministic map of an existing codebase: no judgement, just what is on disk."""
     sub = sub.strip("/")
     files = _list_files(project, sub)
@@ -131,7 +132,7 @@ def inventory(project: Project, sub: str = "") -> dict[str, object]:
     docs = [f for f in files if PurePosixPath(f).suffix.lower() in DOC_SUFFIXES
             and not f.startswith((impl_dir(project) + "/", sdd_dir(project) + "/"))][:60]
 
-    modules: dict[str, dict[str, object]] = {}
+    modules: dict[str, dict[str, Any]] = {}
     entry_points: list[dict[str, object]] = []
     for rel in sources:
         path = project.root / rel
@@ -144,35 +145,35 @@ def inventory(project: Project, sub: str = "") -> dict[str, object]:
         loc = text.count("\n") + 1
         kinds = [k for k, rx in ENTRY_PATTERNS.items() if rx.search(text)]
         mod = modules.setdefault(_module_key(rel), {"path": _module_key(rel), "files": [], "loc": 0, "langs": {}, "entry_kinds": set()})
-        mod["files"].append(rel)  # type: ignore[union-attr]
-        mod["loc"] = int(mod["loc"]) + loc  # type: ignore[call-overload]
+        mod["files"].append(rel)
+        mod["loc"] = int(mod["loc"]) + loc
         suffix = PurePosixPath(rel).suffix or "(none)"
-        mod["langs"][suffix] = mod["langs"].get(suffix, 0) + 1  # type: ignore[union-attr]
-        mod["entry_kinds"].update(kinds)  # type: ignore[union-attr]
+        mod["langs"][suffix] = mod["langs"].get(suffix, 0) + 1
+        mod["entry_kinds"].update(kinds)
         if kinds:
             entry_points.append({"file": rel, "kinds": kinds})
 
-    stems = {PurePosixPath(f).stem: key for key, m in modules.items() for f in m["files"]}  # type: ignore[union-attr]
+    stems = {PurePosixPath(f).stem: key for key, m in modules.items() for f in m["files"]}
     unmatched = 0
     for t in tests:
         stem = re.sub(r"^test_|_test$|\.test$|\.spec$|^test", "", PurePosixPath(t).stem)
         owner = stems.get(stem)
         if owner:
-            modules[owner].setdefault("tests", []).append(t)  # type: ignore[union-attr]
+            modules[owner].setdefault("tests", []).append(t)
         else:
             unmatched += 1
 
-    mod_list = sorted(modules.values(), key=lambda m: -int(m["loc"]))  # type: ignore[call-overload]
+    mod_list = sorted(modules.values(), key=lambda m: -int(m["loc"]))
     for m in mod_list:
-        m["entry_kinds"] = sorted(m["entry_kinds"])  # type: ignore[arg-type]
-        m["file_count"] = len(m["files"])  # type: ignore[arg-type]
+        m["entry_kinds"] = sorted(m["entry_kinds"])
+        m["file_count"] = len(m["files"])
         m.setdefault("tests", [])
 
     batches: list[list[str]] = []
     current: list[str] = []
     cur_files = cur_loc = 0
     for m in mod_list:
-        n, loc = int(m["file_count"]), int(m["loc"])  # type: ignore[call-overload]
+        n, loc = int(m["file_count"]), int(m["loc"])
         oversized = n > MAX_BATCH_FILES or loc > MAX_BATCH_LOC
         if oversized:
             m["split"] = True  # too big for one reader: the skill should split by sub-package
@@ -190,7 +191,7 @@ def inventory(project: Project, sub: str = "") -> dict[str, object]:
     return {
         "project": project.config().get("project_name"),
         "scope": sub or ".",
-        "totals": {"source_files": len(sources), "loc": sum(int(m["loc"]) for m in mod_list), "test_files": len(tests),  # type: ignore[call-overload]
+        "totals": {"source_files": len(sources), "loc": sum(int(m["loc"]) for m in mod_list), "test_files": len(tests),
                    "unmatched_tests": unmatched, "modules": len(mod_list)},
         "manifests": manifests,
         "existing_docs": docs,
@@ -213,7 +214,7 @@ def cmd_inventory(args: argparse.Namespace) -> int:
     for m in result["modules"]:  # type: ignore[attr-defined]
         kinds = f"  [{', '.join(m['entry_kinds'])}]" if m["entry_kinds"] else ""
         print(f"  {m['path']:<28} {m['file_count']:>4} files {m['loc']:>7} loc{kinds}{'  (split)' if m.get('split') else ''}")
-    print(f"Batches: {len(result['batches'])}" + ("  (use parallel subagents)" if result["parallel_recommended"] else ""))  # type: ignore[arg-type]
+    print(f"Batches: {len(result['batches'])}" + ("  (use parallel subagents)" if result["parallel_recommended"] else ""))
     return 0
 
 

@@ -17,6 +17,7 @@ import argparse
 import json
 import sys
 from pathlib import Path
+from typing import Any
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent / "hooks"))
 
@@ -55,6 +56,7 @@ def main() -> None:
     args = parser.parse_args()
     project = Project(Path(args.project))
 
+    item: dict[str, Any] | None
     if args.command == "open":
         item = dc.open_change(project, args.title, args.trigger, args.kind, args.task)
         record_metric(project, "design_change_open", id=item["id"], kind=item["kind"])

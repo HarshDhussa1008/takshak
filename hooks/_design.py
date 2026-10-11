@@ -93,7 +93,7 @@ def freeze(project: Project, sdd_rel: str, reason: str = "") -> dict[str, Any]:
     """Lock the design. Re-freezing a design that changed since the last freeze is allowed but is
     always on the record: who changed a frozen design, and why, must be visible to a reviewer."""
     prior = read_json(project.root / freeze_rel(sdd_rel))
-    record = {"sdd": sdd_rel, "hash": design_hash(project, sdd_rel), "frozen_at": now_iso(),
+    record: dict[str, Any] = {"sdd": sdd_rel, "hash": design_hash(project, sdd_rel), "frozen_at": now_iso(),
               "adrs": [a["number"] for a in adr.load_all(project) if adr.is_live(a)],
               "refreezes": list(prior.get("refreezes") or [])}
     if prior.get("hash") and prior["hash"] != record["hash"]:

@@ -223,7 +223,8 @@ def build_pack(project: Project, sdd: str) -> str:
     checks = design.readiness(project, sdd)
     info = design.summary(checks)
     report = trace.build(project, sdd)
-    title = (re.match(r"#\s*(?:SDD:\s*)?(.+)", text) or [None, "Design"])[1]
+    m_title = re.match(r"#\s*(?:SDD:\s*)?(.+)", text)
+    title = m_title.group(1) if m_title else "Design"
     fs = design.freeze_state(project, sdd)
     esc = html.escape
 
