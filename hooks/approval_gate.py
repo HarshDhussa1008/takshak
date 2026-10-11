@@ -97,8 +97,8 @@ def is_planning_artifact(project: Project, path: Path, sdd_dir: str) -> bool:
     except ValueError:
         return True  # outside the project: not ours to gate
     parts = rel.parts
-    if parts and parts[0] == ".claude":
-        return True
+    if parts and parts[0] in {".claude", "docs"}:
+        return True  # configuration, state and the whole documentation tree are never source
     sdd_parts = Path(sdd_dir).parts
     if sdd_parts and tuple(parts[: len(sdd_parts)]) == tuple(sdd_parts):
         return True

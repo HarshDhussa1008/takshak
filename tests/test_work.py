@@ -364,3 +364,13 @@ def test_new_settings_are_defaults_and_state_is_gitignored() -> None:
     assert cfg["work_item_gate"] is True
     assert "work_items.json" in (ROOT / "templates" / "claude.gitignore").read_text()
     assert "jira_profile.json" not in (ROOT / "templates" / "claude.gitignore").read_text()  # shared on purpose
+
+
+def test_docs_tree_and_config_are_never_source(project) -> None:  # type: ignore[no-untyped-def]
+    """init/scaffold must not be blocked by the very gate they install (found in a real run)."""
+    project.write(".claude/framework.json", {"work_item_gate": True})
+    for tool_input, tool in (({"file_path": str(project.root / "docs/adr/.gitkeep"), "content": ""}, "Write"),
+                             ({"file_path": str(project.root / "docs/reviews/x.svg"), "content": "<svg/>"}, "Write"),
+                             ({"command": "mkdir -p docs/adr && touch docs/adr/.gitkeep"}, "Bash")):
+        out = project.hook_json("approval_gate", {"hook_event_name": "PreToolUse", "tool_name": tool, "tool_input": tool_input})
+        assert out.get("hookSpecificOutput", {}).get("permissionDecision") != "deny", (tool, tool_input)

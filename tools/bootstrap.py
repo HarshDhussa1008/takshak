@@ -404,7 +404,7 @@ def doctor(root: Path, data_dir: Path | None) -> int:
         if found and module and exe.startswith("python"):
             found = subprocess.run([exe, "-c", f"import {module.group(1)}"], capture_output=True, check=False).returncode == 0
         check(found, f"{key}: {cmd}", f"{key}: `{cmd}` is not runnable here")
-    if "echo '[ship]" in str(config.get("build_command")):
+    if "Configure build_command in .claude/framework.json" in str(config.get("build_command")):
         check(False, "", "build_command is still the placeholder -- /takshak:ship cannot deploy")
     if config.get("jira_integration"):
         check(bool(config.get("jira_project_key")), f"Jira project {config.get('jira_project_key')}",

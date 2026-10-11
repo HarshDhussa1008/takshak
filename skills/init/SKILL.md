@@ -9,8 +9,9 @@ argument-hint: "[--team] [--migrate]"
 ## Step 1 — Run the bootstrap
 ```bash
 bash "${CLAUDE_PLUGIN_ROOT}/hooks/run.sh" "${CLAUDE_PLUGIN_ROOT}/tools/bootstrap.py" init \
-  --project "${CLAUDE_PROJECT_DIR:-$PWD}" --plugin-data "${CLAUDE_PLUGIN_DATA}" $ARGUMENTS
+  --project "${CLAUDE_PROJECT_DIR:-$PWD}" --plugin-data "${CLAUDE_PLUGIN_DATA}" [--team] [--migrate]
 ```
+Add `--team` / `--migrate` only when the arguments (`$ARGUMENTS`) say so. Never paste the arguments into the command: they may be free text (a description of the project, its stack, its commands) and the shell would choke on it. Treat free text as answers for Step 2.
 It is idempotent and never overwrites existing config or state. Relay its report to the user as a short checklist.
 
 - If it reports **legacy copy-installed hooks**, ask the user whether to migrate, then re-run with `--migrate` (removes the old `.claude/hooks/*.py` wiring and files so hooks don't fire twice).
